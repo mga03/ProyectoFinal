@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalles Completo - Wallet Secure</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-4 mb-5">
+    
+    <!-- Alerts -->
+    <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        Operación realizada con éxito.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        Ha ocurrido un error al guardar los datos. Verifique la información.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+            <li class="breadcrumb-item active">Gestión Integral</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- LEFT COLUMN: Info & Beneficiaries -->
+        <div class="col-lg-4">
+            
+            <!-- Insurance Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <img th:src="${insurance.imageUrl != null && !insurance.imageUrl.empty ? insurance.imageUrl : 'https://placehold.co/600x400/png'}" 
+                     class="card-img-top" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h4 class="card-title fw-bold text-primary" th:text="${insurance.title}">Title</h4>
+                    <span class="badge bg-secondary mb-2" th:text="${insurance.category}">Cat</span>
+                    <ul class="list-unstyled mt-2">
+                        <li><strong>Cía:</strong> <span th:text="${insurance.company}">Cía</span></li>
+                        <li><strong>Póliza:</strong> <span th:text="${insurance.policyNumber}">123</span></li>
+                        <li><strong>Vence:</strong> <span th:text="${#temporals.format(insurance.expiryDate, 'dd/MM/yyyy')}">Date</span></li>
+                        <li><strong>Prima:</strong> <span th:text="${insurance.premiumAmount} + ' €'">0 €</span> <span class="badge bg-light text-dark border" th:text="${insurance.paymentPeriod}">Yearly</span></li>
+                    </ul>
+                    <a th:href="@{/edit/{id}(id=${insurance.id})}" class="btn btn-outline-primary w-100 mt-2">Editar Datos</a>
+                </div>
+            </div>
+
+            <!-- Beneficiaries Module -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-success text-white fw-bold"><i class="bi bi-people-fill"></i> Beneficiarios</div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center" th:each="b : ${insurance.beneficiaries}">
+                            <span th:text="${b.fullName + ' (' + b.relation + ')'}">Name</span>
+                            <span class="badge bg-light text-dark border" th:text="${b.dni}">DNI</span>
+                        </li>
+                        <li class="list-group-item text-center text-muted" th:if="${#lists.isEmpty(insurance.beneficiaries)}">Sin beneficiarios</li>
+                    </ul>
+                    <div class="p-3 bg-light border-top">
+                        <form th:action="@{/insurance/{id}/beneficiaries/save(id=${insurance.id})}" th:object="${newBeneficiary}" method="post">
+                            <div class="input-group mb-2">
+                                <input type="text" th:field="*{fullName}" class="form-control form-control-sm" placeholder="Nombre" required>
+                                <select th:field="*{relation}" class="form-select form-select-sm" style="max-width: 100px;">
+                                    <option value="HIJO">Hijo</option>
+                                    <option value="CONYUGE">Cónyuge</option>
+                                    <option value="PADRE">Padre</option>
+                                    <option value="OTRO">Otro</option>
+                                </select>
+                            </div>
+                            <input type="text" th:field="*{dni}" class="form-control form-control-sm mb-2" placeholder="DNI / ID" required>
+                            <button type="submit" class="btn btn-sm btn-success w-100">Añadir Beneficiario</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Claims & Payments -->
+        <div class="col-lg-8">
+            
+            <!-- Payments History Module -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-dark text-white fw-bold"><i class="bi bi-currency-euro"></i> Historial de Pagos</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light"><tr><th>Fecha</th><th>Importe</th><th>Estado</th></tr></thead>
+                            <tbody>
+                                <tr th:each="p : ${insurance.payments}">
+                                    <td th:text="${#temporals.format(p.paymentDate, 'dd/MM/yyyy')}">Date</td>
+                                    <td th:text="${p.amount} + ' €'">0 €</td>
+                                    <td>
+                                        <span th:if="${p.status.name() == 'PAID'}" class="badge bg-success">PAGADO</span>
+                                        <span th:if="${p.status.name() == 'PENDING'}" class="badge bg-warning text-dark">PENDIENTE</span>
+                                        <span th:if="${p.status.name() == 'OVERDUE'}" class="badge bg-danger">VENCIDO</span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(insurance.payments)}"><td colspan="3" class="text-center text-muted">No hay pagos registrados</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Claims Module -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-triangle-fill"></i> Siniestros</span>
+                    <button class="btn btn-sm btn-light text-danger fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#claimForm">Reportar Nuevo</button>
+                </div>
+                
+                <div class="collapse p-3 border-bottom bg-light" id="claimForm">
+                    <form th:action="@{/insurance/{id}/claims/save(id=${insurance.id})}" th:object="${newClaim}" method="post">
+                        <div class="row g-2">
+                            <div class="col-md-12"><input type="text" th:field="*{description}" class="form-control form-control-sm" placeholder="Descripción del incidente..." required></div>
+                            <div class="col-md-6"><input type="date" th:field="*{incidentDate}" class="form-control form-control-sm" required></div>
+                            <div class="col-md-6"><input type="number" step="0.01" th:field="*{estimatedCost}" class="form-control form-control-sm" placeholder="Costo Est."></div>
+                            <div class="col-12"><button type="submit" class="btn btn-sm btn-danger w-100">Registrar</button></div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light"><tr><th>Fecha</th><th>Descripción</th><th>Estado</th><th>Costo</th></tr></thead>
+                        <tbody>
+                            <tr th:each="c : ${insurance.claims}">
+                                <td th:text="${#temporals.format(c.incidentDate, 'dd/MM/yyyy')}"></td>
+                                <td th:text="${c.description}"></td>
+                                <td>
+                                    <span th:if="${c.status.name() == 'OPEN'}" class="badge bg-warning text-dark">ABIERTO</span>
+                                    <span th:if="${c.status.name() == 'CLOSED'}" class="badge bg-success">CERRADO</span>
+                                    <span th:if="${c.status.name() == 'REJECTED'}" class="badge bg-secondary">RECHAZADO</span>
+                                </td>
+                                <td th:text="${c.estimatedCost} + ' €'"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(insurance.claims)}"><td colspan="4" class="text-center p-3 text-muted">Sin siniestros</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
