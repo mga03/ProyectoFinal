@@ -4,6 +4,8 @@ import com.wallet.secure.entity.Insurance;
 import com.wallet.secure.entity.User;
 import com.wallet.secure.repository.InsuranceRepository;
 import com.wallet.secure.repository.UserRepository;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,20 +25,20 @@ public class InsuranceRestController {
     }
 
     @GetMapping("/insurances")
-    public List<Insurance> getInsurances() {
-        Long userId = 1L;
-        User user = userRepository.findById(userId).orElse(null);
+    public List<Insurance> getInsurances(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername());
         if (user == null) {
-            return List.of();
+            throw new RuntimeException("User not found");
         }
         return insuranceRepository.findByUser(user, org.springframework.data.domain.Pageable.unpaged()).getContent();
     }
 
     @PostMapping("/insurances")
-    public Insurance saveInsurance(@RequestBody Insurance insurance) {
-        Long userId = 1L;
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with ID 1 not found."));
+    public Insurance saveInsurance(@RequestBody Insurance insurance, @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername());
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
 
         insurance.setUser(user);
         return insuranceRepository.save(insurance);

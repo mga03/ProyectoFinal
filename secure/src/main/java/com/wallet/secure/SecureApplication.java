@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 public class SecureApplication {
@@ -15,7 +16,7 @@ public class SecureApplication {
     }
 
     @Bean
-    public CommandLineRunner initData(UserRepository userRepository) {
+    public CommandLineRunner initData(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             // Check if user with ID 1 exists
             if (!userRepository.existsById(1L)) {
@@ -26,7 +27,7 @@ public class SecureApplication {
                 // we assume this is the first user.
                 user.setName("Usuario Demo");
                 user.setEmail("demo@wallet.com");
-                user.setPassword("password123");
+                user.setPassword(passwordEncoder.encode("password123"));
                 
                 userRepository.save(user);
                 System.out.println("Initialized 'Usuario Demo' with ID " + user.getId());
