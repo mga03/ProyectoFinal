@@ -15,6 +15,14 @@ public class MvcConfig implements WebMvcConfigurer {
         Path uploadDir = Paths.get("./uploads");
         String uploadPath = uploadDir.toFile().getAbsolutePath();
 
+        try {
+            if (!java.nio.file.Files.exists(uploadDir)) {
+                java.nio.file.Files.createDirectories(uploadDir);
+            }
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Could not verify/create uploads directory", e);
+        }
+
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:/" + uploadPath + "/");
     }
