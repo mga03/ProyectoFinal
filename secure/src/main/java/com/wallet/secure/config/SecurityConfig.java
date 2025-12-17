@@ -16,7 +16,25 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
+                // Public
                 .requestMatchers("/login", "/register", "/register/save", "/css/**", "/js/**", "/api/**").permitAll()
+                
+                // Admin Area
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                // Insurance Delete (Admin & Manager)
+                .requestMatchers("/insurance/delete/**").hasAnyRole("ADMIN", "MANAGER")
+
+                // Insurance Edit/Create (Admin & Manager)
+                .requestMatchers("/insurance/edit/**", "/new", "/save").hasAnyRole("ADMIN", "MANAGER")
+
+                // Insurance Claims (Admin, Manager, Worker)
+                .requestMatchers("/insurance/{id}/claims/**").hasAnyRole("ADMIN", "MANAGER", "WORKER")
+
+                // Support (Admin & Collaborator)
+                .requestMatchers("/support/**").hasAnyRole("ADMIN", "COLLABORATOR") // Example rule from request
+
+                // All others (Dashboard, Details, etc) -> Authenticated
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

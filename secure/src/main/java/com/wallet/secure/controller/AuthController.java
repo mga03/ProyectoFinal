@@ -38,6 +38,7 @@ public class AuthController {
         }
         
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole("ROLE_WORKER"); // Default role
         userRepository.save(user);
         return "redirect:/login?success";
     }

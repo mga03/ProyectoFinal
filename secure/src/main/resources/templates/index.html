@@ -24,6 +24,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="/profile">Mi Perfil</a></li>
+                    <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" href="/admin/users">Panel Admin</a></li>
                     <li><a class="dropdown-item" href="/support">Centro de Soporte</a></li>
                 </ul>
             </div>
@@ -86,7 +87,7 @@
                 </div>
                 <div class="col-md-3 text-end d-flex gap-2">
                     <a href="/insurances/export/pdf" class="btn btn-outline-danger w-50" target="_blank"><i class="bi bi-file-pdf"></i> PDF</a>
-                    <a href="/new" class="btn btn-success fw-bold w-50"><i class="bi bi-plus-lg"></i> Nuevo</a>
+                    <a sec:authorize="hasAnyRole('ADMIN', 'MANAGER')" href="/new" class="btn btn-success fw-bold w-50"><i class="bi bi-plus-lg"></i> Nuevo</a>
                 </div>
             </form>
         </div>
@@ -114,7 +115,7 @@
                 
                 <div class="card-footer bg-white border-top-0 d-flex flex-column pb-3">
                     <a th:href="@{/insurance/{id}/details(id=${insurance.id})}" class="btn btn-outline-info w-100 mb-2 fw-bold"><i class="bi bi-eye"></i> Gestión Integral</a>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between" sec:authorize="hasAnyRole('ADMIN', 'MANAGER')">
                         <a th:href="@{/edit/{id}(id=${insurance.id})}" class="btn btn-sm btn-outline-primary w-50 me-1"><i class="bi bi-pencil"></i> Editar</a>
                         <a th:href="@{/delete/{id}(id=${insurance.id})}" class="btn btn-sm btn-outline-danger w-50 ms-1" onclick="return confirm('¿Seguro?');"><i class="bi bi-trash"></i></a>
                     </div>
