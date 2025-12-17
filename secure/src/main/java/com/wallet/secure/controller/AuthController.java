@@ -32,13 +32,39 @@ public class AuthController {
     }
 
     @PostMapping("/register/save")
-    public String saveUser(@ModelAttribute("user") User user) {
+    public String saveUser(@ModelAttribute("user") User user,
+                           @org.springframework.web.bind.annotation.RequestParam String role,
+                           @org.springframework.web.bind.annotation.RequestParam String roleToken) {
+        
         if (userRepository.findByEmail(user.getEmail()) != null) {
             return "redirect:/register?error";
         }
-        
+
+        // Validate Role Token
+        boolean isValid = false;
+        switch (role) {
+            case "ROLE_ADMIN":
+                if ("administrador".equals(roleToken)) isValid = true;
+                break;
+            case "ROLE_MANAGER":
+                if ("gestor".equals(roleToken)) isValid = true;
+                break;
+            case "ROLE_WORKER":
+                if ("trabajador".equals(roleToken)) isValid = true;
+                break;
+            case "ROLE_COLLABORATOR":
+                if ("colaborador".equals(roleToken)) isValid = true;
+                break;
+            default:
+                isValid = false;
+        }
+
+        if (!isValid) {
+            return "redirect:/register?errorToken";
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("ROLE_WORKER"); // Default role
+        user.setRole(role);
         userRepository.save(user);
         return "redirect:/login?success";
     }

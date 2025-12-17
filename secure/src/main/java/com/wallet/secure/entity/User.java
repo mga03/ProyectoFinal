@@ -22,6 +22,10 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Insurance> insurances = new ArrayList<>();
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ticket> tickets = new ArrayList<>();
+
     // Constructors
     public User() {}
 
@@ -51,6 +55,11 @@ public class User {
     public List<Insurance> getInsurances() { return insurances; }
     public void setInsurances(List<Insurance> insurances) { 
         this.insurances = insurances; 
+    }
+
+    public List<Ticket> getTickets() { return tickets; }
+    public void setTickets(List<Ticket> tickets) { 
+        this.tickets = tickets; 
     }
     
     // Helper method to add insurance

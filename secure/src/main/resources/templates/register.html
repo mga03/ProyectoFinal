@@ -17,6 +17,9 @@
     <div th:if="${param.error}" class="alert alert-danger text-center">
         El email ya está registrado.
     </div>
+    <div th:if="${param.errorToken}" class="alert alert-danger text-center">
+        Clave de rol incorrecta. No se ha podido registrar el usuario.
+    </div>
 
     <form th:action="@{/register/save}" th:object="${user}" method="post">
         <div class="mb-3">
@@ -31,6 +34,21 @@
             <label class="form-label fw-bold">Contraseña</label>
             <input type="password" th:field="*{password}" class="form-control" required minlength="4">
             <div class="form-text">Mínimo 4 caracteres.</div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Rol</label>
+            <select name="role" class="form-select" required>
+                <option value="ROLE_WORKER">Trabajador</option>
+                <option value="ROLE_MANAGER">Gestor</option>
+                <option value="ROLE_ADMIN">Administrador</option>
+                <option value="ROLE_COLLABORATOR">Colaborador</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-bold">Clave de Rol</label>
+            <input type="password" name="roleToken" class="form-control" placeholder="Introduce la clave del rol para confirmar" required>
         </div>
         <div class="d-grid">
             <button type="submit" class="btn btn-success btn-lg">Registrarse</button>

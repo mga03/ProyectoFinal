@@ -45,4 +45,26 @@ public class UserController {
         }
         return "redirect:/profile?success";
     }
+
+    @PostMapping("/profile/delete")
+    public String deleteProfile(@org.springframework.web.bind.annotation.RequestParam("confirmation") String confirmation, 
+                                @AuthenticationPrincipal UserDetails userDetails,
+                                jakarta.servlet.http.HttpServletRequest request,
+                                jakarta.servlet.http.HttpServletResponse response) {
+        
+        if (!"eliminar".equals(confirmation)) {
+            return "redirect:/profile?error=invalid_confirmation";
+        }
+
+        User user = userRepository.findByEmail(userDetails.getUsername());
+        if (user != null) {
+            userRepository.delete(user);
+            
+            // Clear session manually
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+            new org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler().logout(request, response, null);
+        }
+
+        return "redirect:/login?deleted";
+    }
 }
