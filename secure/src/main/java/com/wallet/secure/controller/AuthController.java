@@ -41,19 +41,20 @@ public class AuthController {
                            @RequestParam String roleToken,
                            Model model) {
 
+        // 1. Si hay errores de validación (campos vacíos, pass corta...), volvemos al form
         if (result.hasErrors()) {
-            return "register";
+            return "register"; // Thymeleaf mostrará los errores de campos automáticamente
         }
         
         try {
             userService.registerUser(user, role, roleToken);
-            logger.info("Usuario registrado correctamente (pendiente verificacion): {}", user.getEmail());
-            return "redirect:/login?verify";
+            // Si todo va bien (incluso si falló el email pero se capturó), vamos al login
+            return "redirect:/login?success"; 
         } catch (Exception e) {
+            // 2. Si hay error de negocio (email duplicado, rol mal), lo capturamos
             logger.error("Error en registro: {}", e.getMessage());
-            // Show clear error message to user
-            model.addAttribute("error", "Error en el registro: " + e.getMessage());
-            return "register";
+            model.addAttribute("error", e.getMessage()); // Pasamos el mensaje a la vista
+            return "register"; // Volvemos al formulario para que el usuario corrija
         }
     }
     
