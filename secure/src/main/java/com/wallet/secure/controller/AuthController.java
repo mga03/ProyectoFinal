@@ -1,24 +1,27 @@
 package com.wallet.secure.controller;
 
 import com.wallet.secure.entity.User;
-import com.wallet.secure.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.wallet.secure.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class AuthController {
+    
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/login")
     public String login() {
@@ -32,40 +35,69 @@ public class AuthController {
     }
 
     @PostMapping("/register/save")
-    public String saveUser(@ModelAttribute("user") User user,
-                           @org.springframework.web.bind.annotation.RequestParam String role,
-                           @org.springframework.web.bind.annotation.RequestParam String roleToken) {
+    public String saveUser(@Valid @ModelAttribute("user") User user,
+                           BindingResult result,
+                           @RequestParam String role,
+                           @RequestParam String roleToken,
+                           Model model) {
+
+        if (result.hasErrors()) {
+            return "register";
+        }
         
-        if (userRepository.findByEmail(user.getEmail()) != null) {
-            return "redirect:/register?error";
+        try {
+            userService.registerUser(user, role, roleToken);
+            logger.info("Usuario registrado correctamente (pendiente verificacion): {}", user.getEmail());
+            return "redirect:/login?verify";
+        } catch (Exception e) {
+            logger.error("Error en registro: {}", e.getMessage());
+            // Show clear error message to user
+            model.addAttribute("error", "Error en el registro: " + e.getMessage());
+            return "register";
         }
-
-        // Validate Role Token
-        boolean isValid = false;
-        switch (role) {
-            case "ROLE_ADMIN":
-                if ("administrador".equals(roleToken)) isValid = true;
-                break;
-            case "ROLE_MANAGER":
-                if ("gestor".equals(roleToken)) isValid = true;
-                break;
-            case "ROLE_WORKER":
-                if ("trabajador".equals(roleToken)) isValid = true;
-                break;
-            case "ROLE_COLLABORATOR":
-                if ("colaborador".equals(roleToken)) isValid = true;
-                break;
-            default:
-                isValid = false;
+    }
+    
+    @GetMapping("/verify")
+    public String verifyAccount(@RequestParam("code") String code) {
+        boolean verified = userService.verifyUser(code);
+        if (verified) {
+             return "redirect:/login?verified";
+        } else {
+             return "redirect:/login?error";
         }
-
-        if (!isValid) {
-            return "redirect:/register?errorToken";
+    }
+    
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordForm() {
+        return "forgot_password";
+    }
+    
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@RequestParam("email") String email, Model model) {
+        try {
+            userService.initiatePasswordRecovery(email);
+        } catch (Exception e) {
+            logger.error("Error en recuperacion: {}", e.getMessage());
         }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(role);
-        userRepository.save(user);
-        return "redirect:/login?success";
+        return "redirect:/forgot-password?sent";
+    }
+    
+    @GetMapping("/reset-password")
+    public String showResetPasswordForm(@RequestParam("token") String token, Model model) {
+        model.addAttribute("token", token);
+        return "reset_password";
+    }
+    
+    @PostMapping("/reset-password")
+    public String processResetPassword(@RequestParam("token") String token, 
+                                       @RequestParam("password") String password,
+                                       Model model) {
+        try {
+            userService.resetPassword(token, password);
+            return "redirect:/login?resetSuccess";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error restableciendo contraseña: " + e.getMessage());
+            return "login"; 
+        }
     }
 }

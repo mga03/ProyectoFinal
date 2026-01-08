@@ -37,6 +37,11 @@
         </div>
         
         <div class="mb-3">
+            <label class="form-label fw-bold">Móvil</label>
+            <input type="tel" th:field="*{mobile}" class="form-control" required placeholder="Ej: 612345678" pattern="[679][0-9]{8}" title="Debe empezar por 6, 7 o 9 y tener 9 dígitos">
+        </div>
+        
+        <div class="mb-3">
             <label class="form-label fw-bold">Rol</label>
             <select name="role" class="form-select" required>
                 <option value="ROLE_WORKER">Trabajador</option>

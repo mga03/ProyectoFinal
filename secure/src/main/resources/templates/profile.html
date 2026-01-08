@@ -31,6 +31,11 @@
                             <input type="email" th:field="*{email}" class="form-control" required>
                         </div>
                         
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Móvil</label>
+                            <input type="tel" th:field="*{mobile}" class="form-control" required pattern="[679][0-9]{8}">
+                        </div>
+                        
                         <hr class="my-4">
                         <h6 class="text-muted mb-3">Cambiar Contraseña (Opcional)</h6>
                         

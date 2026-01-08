@@ -2,6 +2,8 @@ package com.wallet.secure;
 
 import com.wallet.secure.entity.User;
 import com.wallet.secure.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,14 +13,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @SpringBootApplication
 public class SecureApplication {
 
+    private static final Logger logger = LoggerFactory.getLogger(SecureApplication.class);
+
     public static void main(String[] args) {
         SpringApplication.run(SecureApplication.class, args);
+        logger.info("Aplicacion Wallet Secure iniciada correctamente.");
     }
 
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            // Check if user with ID 1 exists
             // 1. Admin
             if (userRepository.findByEmail("admin@wallet.com") == null) {
                 User admin = new User();
@@ -26,8 +30,9 @@ public class SecureApplication {
                 admin.setEmail("admin@wallet.com");
                 admin.setPassword(passwordEncoder.encode("1234"));
                 admin.setRole("ROLE_ADMIN");
+                admin.setEnabled(true);
                 userRepository.save(admin);
-                System.out.println("Created ADMIN user");
+                logger.info("Created ADMIN user");
             }
 
             // 2. Manager
@@ -37,8 +42,9 @@ public class SecureApplication {
                 manager.setEmail("manager@wallet.com");
                 manager.setPassword(passwordEncoder.encode("1234"));
                 manager.setRole("ROLE_MANAGER");
+                manager.setEnabled(true);
                 userRepository.save(manager);
-                System.out.println("Created MANAGER user");
+                logger.info("Created MANAGER user");
             }
 
             // 3. Worker
@@ -48,8 +54,9 @@ public class SecureApplication {
                 worker.setEmail("worker@wallet.com");
                 worker.setPassword(passwordEncoder.encode("1234"));
                 worker.setRole("ROLE_WORKER");
+                worker.setEnabled(true);
                 userRepository.save(worker);
-                System.out.println("Created WORKER user");
+                logger.info("Created WORKER user");
             }
 
             // 4. Collaborator
@@ -59,8 +66,9 @@ public class SecureApplication {
                 collab.setEmail("collab@wallet.com");
                 collab.setPassword(passwordEncoder.encode("1234"));
                 collab.setRole("ROLE_COLLABORATOR");
+                collab.setEnabled(true);
                 userRepository.save(collab);
-                System.out.println("Created COLLABORATOR user");
+                logger.info("Created COLLABORATOR user");
             }
 
             // Check if demo user with ID 1 exists (legacy check, kept for safety)
@@ -70,9 +78,10 @@ public class SecureApplication {
                 user.setEmail("demo@wallet.com");
                 user.setPassword(passwordEncoder.encode("password123"));
                 user.setRole("ROLE_WORKER");
+                user.setEnabled(true);
                 
                 userRepository.save(user);
-                System.out.println("Initialized 'Usuario Demo' with ID " + user.getId());
+                logger.info("Initialized 'Usuario Demo' with ID {}", user.getId());
             }
         };
     }

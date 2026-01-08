@@ -1,6 +1,7 @@
 package com.wallet.secure.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,17 @@ public class User {
     private String password;
 
     private String role;
+
+    private boolean enabled = false;
+
+    @Column(name = "verification_code", length = 64)
+    private String verificationCode;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Pattern(regexp = "[679][0-9]{8}", message = "Móvil inválido")
+    private String mobile;
 
     @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -50,7 +62,20 @@ public class User {
     public void setPassword(String password) { this.password = password; }
 
     public String getRole() { return role; }
+
     public void setRole(String role) { this.role = role; }
+
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+    public String getVerificationCode() { return verificationCode; }
+    public void setVerificationCode(String verificationCode) { this.verificationCode = verificationCode; }
+
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public String getMobile() { return mobile; }
+    public void setMobile(String mobile) { this.mobile = mobile; }
 
     public List<Insurance> getInsurances() { return insurances; }
     public void setInsurances(List<Insurance> insurances) { 

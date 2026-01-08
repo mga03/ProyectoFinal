@@ -17,6 +17,7 @@ public class Insurance {
     @jakarta.validation.constraints.NotBlank(message = "La compañía es obligatoria")
     private String company;
     private String policyNumber;
+    @jakarta.validation.constraints.NotNull(message = "La categoría es obligatoria")
     private String category;
     
     @jakarta.validation.constraints.NotNull(message = "La fecha es obligatoria")
@@ -31,6 +32,7 @@ public class Insurance {
     @jakarta.validation.constraints.Min(value = 1, message = "El precio debe ser mayor a 0")
     private Double premiumAmount;
     
+    @jakarta.validation.constraints.NotNull(message = "El periodo de pago es obligatorio")
     @Enumerated(EnumType.STRING)
     private PaymentPeriod paymentPeriod;
 
