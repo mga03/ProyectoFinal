@@ -16,8 +16,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                // Public
-                .requestMatchers("/login", "/register", "/register/save", "/css/**", "/js/**", "/api/**").permitAll()
+                // Public routes (authentication, registration, verification, password recovery)
+                .requestMatchers("/login", "/register/**", "/verify/**", "/forgot-password/**", "/reset-password/**", "/css/**", "/js/**", "/api/**").permitAll()
                 
                 // Admin Area
                 .requestMatchers("/admin/**").hasRole("ADMIN")

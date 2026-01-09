@@ -15,6 +15,10 @@
 <div class="card card-login p-4">
     <div class="brand-logo">Wallet Secure</div>
     
+    <div th:if="${error}" class="alert alert-danger text-center">
+        <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${error}">Error descriptivo aquí</span>
+    </div>
+
     <div th:if="${param.error}" class="alert alert-danger text-center">
         Credenciales incorrectas
     </div>

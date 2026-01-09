@@ -21,40 +21,43 @@ public class UserService {
     @Autowired
     private EmailService emailService;
 
-    // Quitamos @Transactional global para manejar nosotros la transacción del email
+    // Eliminamos @Transactional a nivel de método para controlar nosotros el guardado parcial
     public void registerUser(User user, String role, String roleToken) throws Exception {
         
-        // 1. Validar si existe
+        // 1. Validaciones previas
         if (userRepository.findByEmail(user.getEmail()) != null) {
             throw new Exception("El email ya está registrado.");
         }
-
-        // 2. Validar Token de Rol
-        if (!isValidRoleToken(role, roleToken)) {
-            throw new Exception("Clave de rol incorrecta.");
+        
+        // Validación manual del token de rol (case insensitive)
+        String cleanToken = (roleToken != null) ? roleToken.trim().toLowerCase() : "";
+        boolean tokenValido = false;
+        switch (role) {
+            case "ROLE_ADMIN": tokenValido = "administrador".equals(cleanToken); break;
+            case "ROLE_MANAGER": tokenValido = "gestor".equals(cleanToken); break;
+            case "ROLE_WORKER": tokenValido = "trabajador".equals(cleanToken); break;
+            case "ROLE_COLLABORATOR": tokenValido = "colaborador".equals(cleanToken); break;
+        }
+        if (!tokenValido) {
+            throw new Exception("La Clave de Rol es incorrecta.");
         }
 
-        // 3. Preparar Usuario
+        // 2. Preparar Usuario
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(role);
-        user.setEnabled(false); // Requiere verificación
+        user.setEnabled(false); // Inactivo por defecto
         user.setVerificationCode(UUID.randomUUID().toString());
 
-        // 4. GUARDAR USUARIO (Esto asegura que el usuario se crea en BD)
+        // 3. GUARDAR USUARIO (Commit inmediato a la DB)
         User savedUser = userRepository.save(user);
 
-        // 5. INTENTAR ENVIAR EMAIL (A prueba de fallos)
+        // 4. INTENTAR ENVIAR EMAIL (Dentro de try-catch para no romper el flujo)
         try {
             emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationCode());
         } catch (Exception e) {
-            // SI FALLA EL EMAIL (Por configuración SMTP), NO BORRAMOS EL USUARIO.
-            // Imprimimos el link en consola para desarrollo.
-            System.err.println("=================================================");
-            System.err.println("⚠️ ERROR SMTP: No se pudo enviar el correo a " + savedUser.getEmail());
-            System.err.println("🔗 LINK DE ACTIVACIÓN (COPIA Y PEGA EN NAVEGADOR):");
-            System.err.println("http://localhost:8081/verify?code=" + savedUser.getVerificationCode());
-            System.err.println("=================================================");
-            // No lanzamos excepción para permitir que el registro termine con éxito
+            // Si falla el SMTP, no borramos el usuario. Mostramos link de emergencia.
+            System.err.println("⚠️ NO SE PUDO ENVIAR EL CORREO (Revisa application.properties)");
+            System.err.println("🔗 LINK MANUAL (DEV): http://localhost:8081/verify?code=" + savedUser.getVerificationCode());
         }
     }
 
@@ -69,15 +72,45 @@ public class UserService {
         return true;
     }
 
-    // Métodos auxiliares (Recuperación contraseña, etc.) - Mantenlos como los tenías o cópialos del chat anterior
-    @Transactional(rollbackFor = Exception.class)
+    // Eliminamos @Transactional global para este método para manejar el try-catch
     public void initiatePasswordRecovery(String email) throws Exception {
-         // ... (código existente)
+        User user = userRepository.findByEmail(email);
+        
+        if (user != null) {
+            // 1. Generar y Guardar el Token
+            String token = UUID.randomUUID().toString();
+            user.setResetToken(token);
+            userRepository.save(user); // Guardamos el token ANTES de enviar el correo
+            
+            // 2. Intentar enviar el correo
+            try {
+                emailService.sendPasswordResetEmail(user.getEmail(), token);
+            } catch (Exception e) {
+                // Si falla el correo, mostramos el link en consola para no bloquear al usuario
+                System.err.println("❌ ERROR CORREO RECUPERACIÓN: " + e.getMessage());
+                System.err.println("👉 LINK RECUPERACIÓN MANUAL (DEV):");
+                System.err.println("http://localhost:8081/reset-password?token=" + token);
+            }
+        }
+        // Nota: Si el usuario no existe, no hacemos nada por seguridad (para no revelar correos)
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void resetPassword(String token, String newPassword) throws Exception {
-        // ... (código existente)
+        User user = userRepository.findByResetToken(token);
+        if (user == null) {
+            throw new Exception("Token inválido o expirado.");
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        
+        // USAR saveAndFlush Y CAPTURAR EXCEPCIONES DE VALIDACIÓN
+        try {
+            userRepository.saveAndFlush(user);
+        } catch (Exception e) {
+            throw new Exception("Error guardando usuario (posible dato inválido): " + e.getMessage());
+        }
     }
 
     private boolean isValidRoleToken(String role, String token) {

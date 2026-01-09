@@ -14,13 +14,8 @@
 <div class="card card-register p-4">
     <h3 class="text-center mb-4 fw-bold text-primary">Crear Cuenta</h3>
     
-    <div th:if="${error}" class="alert alert-danger text-center" th:text="${error}"></div>
-    
-    <div th:if="${param.error}" class="alert alert-danger text-center">El email ya está registrado.</div>
-    <div th:if="${param.errorToken}" class="alert alert-danger text-center">Clave de rol incorrecta.</div>
-    
-    <div th:if="${#fields.hasAnyErrors()}" class="alert alert-warning text-center">
-        Por favor, revisa los campos marcados.
+    <div th:if="${error}" class="alert alert-danger text-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${error}">Error</span>
     </div>
 
     <form th:action="@{/register/save}" th:object="${user}" method="post">

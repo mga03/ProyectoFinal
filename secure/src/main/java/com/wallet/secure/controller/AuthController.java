@@ -30,6 +30,7 @@ public class AuthController {
 
     @GetMapping("/register")
     public String register(Model model) {
+        logger.info("📝 Accediendo a /register - Mostrando formulario de registro");
         model.addAttribute("user", new User());
         return "register";
     }
@@ -41,20 +42,17 @@ public class AuthController {
                            @RequestParam String roleToken,
                            Model model) {
 
-        // 1. Si hay errores de validación (campos vacíos, pass corta...), volvemos al form
         if (result.hasErrors()) {
-            return "register"; // Thymeleaf mostrará los errores de campos automáticamente
+            return "register";
         }
         
         try {
             userService.registerUser(user, role, roleToken);
-            // Si todo va bien (incluso si falló el email pero se capturó), vamos al login
-            return "redirect:/login?success"; 
+            return "redirect:/login?success"; // Éxito siempre, con o sin email
         } catch (Exception e) {
-            // 2. Si hay error de negocio (email duplicado, rol mal), lo capturamos
-            logger.error("Error en registro: {}", e.getMessage());
-            model.addAttribute("error", e.getMessage()); // Pasamos el mensaje a la vista
-            return "register"; // Volvemos al formulario para que el usuario corrija
+            // Capturar error (ej: email duplicado, clave incorrecta) y mostrarlo en el HTML
+            model.addAttribute("error", e.getMessage());
+            return "register";
         }
     }
     
@@ -97,7 +95,11 @@ public class AuthController {
             userService.resetPassword(token, password);
             return "redirect:/login?resetSuccess";
         } catch (Exception e) {
-            model.addAttribute("error", "Error restableciendo contraseña: " + e.getMessage());
+            // IMPRIMIR ERROR EN CONSOLA PARA DIAGNÓSTICO
+            System.err.println("❌ ERROR CAMBIANDO PASSWORD: " + e.getMessage());
+            e.printStackTrace(); // Ver la traza completa
+            
+            model.addAttribute("error", "No se pudo cambiar la contraseña: " + e.getMessage());
             return "login"; 
         }
     }
