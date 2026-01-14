@@ -22,42 +22,33 @@ public class UserService {
     private EmailService emailService;
 
     // Eliminamos @Transactional a nivel de método para controlar nosotros el guardado parcial
-    public void registerUser(User user, String role, String roleToken) throws Exception {
-        
-        // 1. Validaciones previas
+    // Método simplificado: Solo recibe el objeto User
+    public void registerUser(User user) throws Exception {
+
+        // 1. Validar si el email ya existe
         if (userRepository.findByEmail(user.getEmail()) != null) {
             throw new Exception("El email ya está registrado.");
         }
-        
-        // Validación manual del token de rol (case insensitive)
-        String cleanToken = (roleToken != null) ? roleToken.trim().toLowerCase() : "";
-        boolean tokenValido = false;
-        switch (role) {
-            case "ROLE_ADMIN": tokenValido = "administrador".equals(cleanToken); break;
-            case "ROLE_MANAGER": tokenValido = "gestor".equals(cleanToken); break;
-            case "ROLE_WORKER": tokenValido = "trabajador".equals(cleanToken); break;
-            case "ROLE_COLLABORATOR": tokenValido = "colaborador".equals(cleanToken); break;
-        }
-        if (!tokenValido) {
-            throw new Exception("La Clave de Rol es incorrecta.");
-        }
 
-        // 2. Preparar Usuario
+        // 2. ASIGNACIÓN AUTOMÁTICA DE ROL
+        // Por seguridad, todos nacen como trabajadores.
+        // Si se requiere un Admin, se cambia manualmente en BD.
+        user.setRole("ROLE_WORKER");
+
+        // 3. Preparar Usuario (Encriptar pass, generar código, deshabilitar)
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(role);
-        user.setEnabled(false); // Inactivo por defecto
+        user.setEnabled(false); // Requiere verificación por email
         user.setVerificationCode(UUID.randomUUID().toString());
 
-        // 3. GUARDAR USUARIO (Commit inmediato a la DB)
+        // 4. Guardar Usuario
         User savedUser = userRepository.save(user);
 
-        // 4. INTENTAR ENVIAR EMAIL (Dentro de try-catch para no romper el flujo)
+        // 5. Enviar Email (Fail-Safe: si falla, muestra link en consola)
         try {
             emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationCode());
         } catch (Exception e) {
-            // Si falla el SMTP, no borramos el usuario. Mostramos link de emergencia.
-            System.err.println("⚠️ NO SE PUDO ENVIAR EL CORREO (Revisa application.properties)");
-            System.err.println("🔗 LINK MANUAL (DEV): http://localhost:8081/verify?code=" + savedUser.getVerificationCode());
+            System.err.println("⚠️ SMTP ERROR: No se envió el correo.");
+            System.err.println("🔗 LINK ACTIVACIÓN (DEV): http://localhost:8081/verify?code=" + savedUser.getVerificationCode());
         }
     }
 
@@ -96,6 +87,17 @@ public class UserService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    public void updateRole(String email, String newRole) throws Exception {
+        User user = userRepository.findByEmail(email);
+        if (user != null) {
+            user.setRole(newRole);
+            userRepository.saveAndFlush(user); // Force commit
+        } else {
+            throw new Exception("Usuario no encontrado con email: " + email);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
     public void resetPassword(String token, String newPassword) throws Exception {
         User user = userRepository.findByResetToken(token);
         if (user == null) {
@@ -113,15 +115,5 @@ public class UserService {
         }
     }
 
-    private boolean isValidRoleToken(String role, String token) {
-        if (token == null) return false;
-        String lowerToken = token.trim().toLowerCase();
-        switch (role) {
-            case "ROLE_ADMIN": return "administrador".equals(lowerToken);
-            case "ROLE_MANAGER": return "gestor".equals(lowerToken);
-            case "ROLE_WORKER": return "trabajador".equals(lowerToken);
-            case "ROLE_COLLABORATOR": return "colaborador".equals(lowerToken);
-            default: return false;
-        }
-    }
+
 }

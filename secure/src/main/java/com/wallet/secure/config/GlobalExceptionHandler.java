@@ -20,8 +20,22 @@ public class GlobalExceptionHandler {
         return modelAndView;
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public org.springframework.http.ResponseEntity<Void> handleResourceNotFound(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        return org.springframework.http.ResponseEntity.notFound().build();
+    }
+
     @ExceptionHandler(Exception.class)
-    public ModelAndView handleException(Exception exc) {
+    public ModelAndView handleException(Exception exc) throws Exception {
+        // Validación DEBUG: Imprimir la excepción real
+        System.out.println("🔥 EXCEPCIÓN RUNTIME: " + exc.getClass().getName());
+        exc.printStackTrace();
+
+        // Si es un error de seguridad (AccessDenied), lo relanzamos para que Spring Security lo maneje
+        if (exc instanceof org.springframework.security.access.AccessDeniedException) {
+            throw exc;
+        }
+
         logger.error("Error no controlado: ", exc);
         ModelAndView modelAndView = new ModelAndView("error");
         modelAndView.addObject("message", "Ha ocurrido un error inesperado: " + exc.getMessage());

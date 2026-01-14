@@ -66,4 +66,61 @@ public class EmailService {
         mailSender.send(message);
         System.out.println("✅ Correo de recuperación enviado a: " + recipientEmail);
     }
+
+    // 1. Correo PARA EL ADMINISTRADOR (guarinosmanuel07@gmail.com)
+    public void sendAdminRoleRequest(String userEmail, String desiredRole) throws MessagingException {
+        System.out.println("📧 Intentando enviar solicitud de admin. De: " + userEmail + " Para: guarinosmanuel07@gmail.com");
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom("guarinosmanuel07@gmail.com");
+        helper.setTo("guarinosmanuel07@gmail.com"); // El Admin recibe la solicitud
+        helper.setSubject("Solicitud de Cambio de Rol: " + userEmail);
+
+        // Links Mágicos para aprobar/rechazar directamente
+        String baseUrl = "http://localhost:8081/admin/role-action";
+        
+        // Ensure URLs are properly encoded would be better, but assuming simple emails for now
+        String approveLink = baseUrl + "?action=approve&email=" + userEmail + "&role=" + desiredRole;
+        String rejectLink = baseUrl + "?action=reject&email=" + userEmail;
+        
+        System.out.println("🔗 Link Aprobar generado: " + approveLink);
+
+        String content = "<html><body>"
+                + "<h3>Solicitud de Cambio de Rol</h3>"
+                + "<p>El usuario <b>" + userEmail + "</b> solicita ser: <b style='color:blue'>" + desiredRole + "</b></p>"
+                + "<p>¿Qué deseas hacer?</p>"
+                + "<a href='" + approveLink + "' style='padding:10px; background:green; color:white; text-decoration:none; border-radius:5px;'>ACEPTAR</a> "
+                + "<a href='" + rejectLink + "' style='padding:10px; background:red; color:white; text-decoration:none; border-radius:5px; margin-left:10px;'>RECHAZAR</a>"
+                + "</body></html>";
+
+        helper.setText(content, true);
+        mailSender.send(message);
+        System.out.println("✅ Correo de solicitud enviado al ADMIN.");
+    }
+
+    // 2. Correo PARA EL USUARIO (Notificación de resultado)
+    public void sendRoleStatusEmail(String userEmail, String status, String roleName) throws MessagingException {
+        System.out.println("📧 Intentando enviar estutus rol. A: " + userEmail + " Estado: " + status);
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom("guarinosmanuel07@gmail.com");
+        helper.setTo(userEmail);
+        helper.setSubject("Respuesta a tu Solicitud de Rol");
+
+        String color = status.equals("APROBADO") ? "green" : "red";
+        String content = "<html><body>"
+                + "<h3>Notificación de Cambio de Rol</h3>"
+                + (status.equals("APROBADO") 
+                    ? "<p>Hola,</p><p>Te informamos que <b>tu rol ha sido cambiado exitosamente</b>.</p>"
+                    + "<p>Nuevo Rol: <b style='color:green'>" + roleName + "</b></p>"
+                    + "<p>Por favor, Cierra Sesión y vuelve a entrar para ver las nuevas opciones.</p>" 
+                    : "<p>Hola,</p><p>Tu solicitud de cambio de rol ha sido <span style='color:red'>DENEGADA</span>.</p>")
+                + "</body></html>";
+
+        helper.setText(content, true);
+        mailSender.send(message);
+        System.out.println("✅ Correo de estatus enviado al USUARIO: " + userEmail);
+    }
 }

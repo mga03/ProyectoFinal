@@ -2,6 +2,7 @@ package com.wallet.secure.controller;
 
 import com.wallet.secure.entity.User;
 import com.wallet.secure.repository.UserRepository;
+import com.wallet.secure.service.EmailService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,16 +11,20 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class UserController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @GetMapping("/profile")
@@ -44,6 +49,22 @@ public class UserController {
             userRepository.save(currentUser);
         }
         return "redirect:/profile?success";
+    }
+
+    @PostMapping("/profile/request-role")
+    public String requestRoleChange(@RequestParam String desiredRole, 
+                                    @AuthenticationPrincipal UserDetails currentUser,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            // Enviamos el correo al ADMIN (guarinosmanuel07@gmail.com)
+            // currentUser.getUsername() es el email del solicitante
+            emailService.sendAdminRoleRequest(currentUser.getUsername(), desiredRole);
+            
+            redirectAttributes.addFlashAttribute("msg", "Solicitud enviada correctamente al Administrador.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error enviando solicitud: " + e.getMessage());
+        }
+        return "redirect:/profile";
     }
 
     @PostMapping("/profile/delete")

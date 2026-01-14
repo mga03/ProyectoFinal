@@ -38,19 +38,17 @@ public class AuthController {
     @PostMapping("/register/save")
     public String saveUser(@Valid @ModelAttribute("user") User user,
                            BindingResult result,
-                           @RequestParam String role,
-                           @RequestParam String roleToken,
-                           Model model) {
+                           Model model) { // <-- Se han eliminado los @RequestParam de rol
 
         if (result.hasErrors()) {
             return "register";
         }
-        
+
         try {
-            userService.registerUser(user, role, roleToken);
-            return "redirect:/login?success"; // Éxito siempre, con o sin email
+            // Llamamos al servicio sin pasar roles (él asignará el default)
+            userService.registerUser(user);
+            return "redirect:/login?success";
         } catch (Exception e) {
-            // Capturar error (ej: email duplicado, clave incorrecta) y mostrarlo en el HTML
             model.addAttribute("error", e.getMessage());
             return "register";
         }

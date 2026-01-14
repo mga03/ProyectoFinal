@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Registro - Wallet Secure</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
     <style>
         body { background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; height: 100vh; }
         .card-register { width: 100%; max-width: 450px; border: none; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
@@ -49,20 +50,9 @@
             <div class="invalid-feedback" th:errors="*{mobile}">Formato inválido (9 dígitos empezando por 6,7,9)</div>
         </div>
         
-        <div class="mb-3">
-            <label class="form-label fw-bold">Rol</label>
-            <select name="role" class="form-select" required>
-                <option value="ROLE_WORKER">Trabajador</option>
-                <option value="ROLE_MANAGER">Gestor</option>
-                <option value="ROLE_ADMIN">Administrador</option>
-                <option value="ROLE_COLLABORATOR">Colaborador</option>
-            </select>
-        </div>
 
-        <div class="mb-4">
-            <label class="form-label fw-bold">Clave de Rol</label>
-            <input type="password" name="roleToken" class="form-control" placeholder="Clave del rol (ej: trabajador)" required>
-        </div>
+
+
 
         <div class="d-grid">
             <button type="submit" class="btn btn-success btn-lg">Registrarse</button>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Error - Wallet Secure</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
     <style>
         body { background-color: #f8d7da; display: flex; align-items: center; justify-content: center; height: 100vh; }
         .card-error { width: 100%; max-width: 500px; border: none; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
@@ -20,6 +21,12 @@
     </div>
     <h2 class="text-danger fw-bold mb-3">¡Vaya! Algo salió mal</h2>
     <p class="text-muted mb-4" th:text="${message} ?: 'Ha ocurrido un error inesperado.'">Error desconocido.</p>
+    
+    <!-- Mensaje específico para Acceso Denegado -->
+    <div th:if="${status == 403}" class="alert alert-warning">
+        <strong>Acceso Denegado:</strong> No tienes permisos para realizar esta acción. <br>
+        Si estás intentando aprobar una solicitud, asegúrate de iniciar sesión como <strong>Administrador</strong>.
+    </div>
     
     <div class="d-grid gap-2">
         <a href="/" class="btn btn-outline-danger btn-lg">Volver al Inicio</a>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Mi Perfil - Wallet Secure</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 
@@ -51,6 +52,36 @@
                     </form>
                     </form>
 
+                    <hr class="my-5 opacity-50">
+
+                    <!-- Role Request Card -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Solicitar Cambio de Rol</h5>
+                            <span class="badge bg-light text-primary fw-bold" th:text="${'Rol Actual: ' + user.role}">Rol Actual</span>
+                        </div>
+                        <div class="card-body">
+                            <p>Si necesitas permisos adicionales, solicita un cambio de rol al administrador.</p>
+                            <form th:action="@{/profile/request-role}" method="post" class="row g-3 align-items-end">
+                                <div class="col-md-8">
+                                    <label class="form-label">Rol Deseado</label>
+                                    <select name="desiredRole" class="form-select" required>
+                                        <option value="ROLE_MANAGER">Gestor (Manager)</option>
+                                        <option value="ROLE_ADMIN">Administrador</option>
+                                        <option value="ROLE_COLLABORATOR">Colaborador</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-send"></i> Enviar Solicitud
+                                    </button>
+                                </div>
+                            </form>
+                            <div th:if="${msg}" class="alert alert-success mt-3" th:text="${msg}"></div>
+                            <div th:if="${error}" class="alert alert-danger mt-3" th:text="${error}"></div>
+                        </div>
+                    </div>
+
                     <hr class="my-5 border-danger opacity-50">
                     
                     <div class="alert alert-danger shadow-sm">
@@ -71,7 +102,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-danger">
       <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title fw-bold">¿Estás absolutamente seguro?</h5>
+        <h5 class="modal-title fw-bold">¿Estás seguro?</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4">

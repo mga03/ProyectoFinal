@@ -24,16 +24,19 @@ public class SecureApplication {
     public CommandLineRunner initData(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             // 1. Admin
-            if (userRepository.findByEmail("admin@wallet.com") == null) {
-                User admin = new User();
-                admin.setName("Admin User");
-                admin.setEmail("admin@wallet.com");
-                admin.setPassword(passwordEncoder.encode("1234"));
-                admin.setRole("ROLE_ADMIN");
-                admin.setEnabled(true);
-                userRepository.save(admin);
-                logger.info("Created ADMIN user");
+            // 1. SUPER ADMIN (El dueño del sistema)
+            User superAdmin = userRepository.findByEmail("guarinosmanuel07@gmail.com");
+            if (superAdmin == null) {
+                superAdmin = new User();
+                superAdmin.setName("Manuel Guarinos (Super Admin)");
+                superAdmin.setEmail("guarinosmanuel07@gmail.com");
             }
+            // Aseguramos que siempre sea Admin y tenga la clave conocida
+            superAdmin.setPassword(passwordEncoder.encode("1234"));
+            superAdmin.setRole("ROLE_ADMIN");
+            superAdmin.setEnabled(true);
+            userRepository.save(superAdmin);
+            logger.info("✅ SUPER ADMIN configurado: guarinosmanuel07@gmail.com / 1234");
 
             // 2. Manager
             if (userRepository.findByEmail("manager@wallet.com") == null) {
@@ -71,8 +74,8 @@ public class SecureApplication {
                 logger.info("Created COLLABORATOR user");
             }
 
-            // Check if demo user with ID 1 exists (legacy check, kept for safety)
-            if (!userRepository.existsById(1L)) {
+            // 5. Demo User (Check by email to avoid duplicates)
+            if (userRepository.findByEmail("demo@wallet.com") == null) {
                 User user = new User();
                 user.setName("Usuario Demo");
                 user.setEmail("demo@wallet.com");
@@ -81,7 +84,7 @@ public class SecureApplication {
                 user.setEnabled(true);
                 
                 userRepository.save(user);
-                logger.info("Initialized 'Usuario Demo' with ID {}", user.getId());
+                logger.info("Created 'Usuario Demo'");
             }
         };
     }
