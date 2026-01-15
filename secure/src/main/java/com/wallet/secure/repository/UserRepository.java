@@ -15,4 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     User findByResetToken(String resetToken);
     
     long countByRole(String role);
+
+    // Nuevo para cambio de rol stateless
+    User findByRoleChangeToken(String roleChangeToken);
 }

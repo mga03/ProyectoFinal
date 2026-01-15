@@ -68,7 +68,7 @@ public class EmailService {
     }
 
     // 1. Correo PARA EL ADMINISTRADOR (guarinosmanuel07@gmail.com)
-    public void sendAdminRoleRequest(String userEmail, String desiredRole) throws MessagingException {
+    public void sendAdminRoleRequest(String userEmail, String desiredRole, String token) throws MessagingException {
         System.out.println("📧 Intentando enviar solicitud de admin. De: " + userEmail + " Para: guarinosmanuel07@gmail.com");
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -77,12 +77,11 @@ public class EmailService {
         helper.setTo("guarinosmanuel07@gmail.com"); // El Admin recibe la solicitud
         helper.setSubject("Solicitud de Cambio de Rol: " + userEmail);
 
-        // Links Mágicos para aprobar/rechazar directamente
-        String baseUrl = "http://localhost:8081/admin/role-action";
+        // Links Mágicos para aprobar/rechazar directamente (Token-Based)
+        String baseUrl = "http://localhost:8081/role-approval";
         
-        // Ensure URLs are properly encoded would be better, but assuming simple emails for now
-        String approveLink = baseUrl + "?action=approve&email=" + userEmail + "&role=" + desiredRole;
-        String rejectLink = baseUrl + "?action=reject&email=" + userEmail;
+        String approveLink = baseUrl + "/approve?token=" + token;
+        String rejectLink = baseUrl + "/reject?token=" + token; // Podríamos implementar reject con token también para limpiar
         
         System.out.println("🔗 Link Aprobar generado: " + approveLink);
 
@@ -90,7 +89,7 @@ public class EmailService {
                 + "<h3>Solicitud de Cambio de Rol</h3>"
                 + "<p>El usuario <b>" + userEmail + "</b> solicita ser: <b style='color:blue'>" + desiredRole + "</b></p>"
                 + "<p>¿Qué deseas hacer?</p>"
-                + "<a href='" + approveLink + "' style='padding:10px; background:green; color:white; text-decoration:none; border-radius:5px;'>ACEPTAR</a> "
+                + "<a href='" + approveLink + "' style='padding:10px; background:green; color:white; text-decoration:none; border-radius:5px;'>ACEPTAR (Link Seguro)</a> "
                 + "<a href='" + rejectLink + "' style='padding:10px; background:red; color:white; text-decoration:none; border-radius:5px; margin-left:10px;'>RECHAZAR</a>"
                 + "</body></html>";
 

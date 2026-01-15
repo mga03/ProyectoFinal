@@ -38,6 +38,13 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Ticket> tickets = new ArrayList<>();
 
+    // Token de Aprobación de Rol (Evita necesidad de login del Admin)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private String roleChangeToken;
+    
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private String requestedRole;
+
     // Constructors
     public User() {}
 
@@ -86,6 +93,12 @@ public class User {
     public void setTickets(List<Ticket> tickets) { 
         this.tickets = tickets; 
     }
+
+    public String getRoleChangeToken() { return roleChangeToken; }
+    public void setRoleChangeToken(String roleChangeToken) { this.roleChangeToken = roleChangeToken; }
+
+    public String getRequestedRole() { return requestedRole; }
+    public void setRequestedRole(String requestedRole) { this.requestedRole = requestedRole; }
     
     // Helper method to add insurance
     public void addInsurance(Insurance insurance) {

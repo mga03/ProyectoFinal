@@ -10,31 +10,20 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                // Public routes (authentication, registration, verification, password recovery)
-                .requestMatchers("/login", "/register/**", "/verify/**", "/forgot-password/**", "/reset-password/**", "/css/**", "/js/**", "/api/**").permitAll()
+                // Public routes (authentication, registration, verification, password recovery, role approval)
+                .requestMatchers("/login", "/register/**", "/verify/**", "/forgot-password/**", "/reset-password/**", "/role-approval/**", "/css/**", "/js/**", "/api/**").permitAll()
                 
-                // Admin Area
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Admin Area (Full Access)
+                .requestMatchers("/admin/**", "/delete/**", "/edit/**", "/new", "/save", "/support/**").hasRole("ADMIN")
 
-                // Insurance Delete (Admin & Manager)
-                .requestMatchers("/insurance/delete/**").hasAnyRole("ADMIN", "MANAGER")
-
-                // Insurance Edit/Create (Admin & Manager)
-                .requestMatchers("/insurance/edit/**", "/new", "/save").hasAnyRole("ADMIN", "MANAGER")
-
-                // Insurance Claims (Admin, Manager, Worker)
-                .requestMatchers("/insurance/{id}/claims/**").hasAnyRole("ADMIN", "MANAGER", "WORKER")
-
-                // Support (Admin & Collaborator)
-                .requestMatchers("/support/**").hasAnyRole("ADMIN", "COLLABORATOR") // Example rule from request
-
-                // All others (Dashboard, Details, etc) -> Authenticated
+                // All others (Dashboard, Details, Claims, etc) -> Authenticated (Consumers/Workers)
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

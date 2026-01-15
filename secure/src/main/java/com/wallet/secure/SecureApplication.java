@@ -38,41 +38,7 @@ public class SecureApplication {
             userRepository.save(superAdmin);
             logger.info("✅ SUPER ADMIN configurado: guarinosmanuel07@gmail.com / 1234");
 
-            // 2. Manager
-            if (userRepository.findByEmail("manager@wallet.com") == null) {
-                User manager = new User();
-                manager.setName("Manager User");
-                manager.setEmail("manager@wallet.com");
-                manager.setPassword(passwordEncoder.encode("1234"));
-                manager.setRole("ROLE_MANAGER");
-                manager.setEnabled(true);
-                userRepository.save(manager);
-                logger.info("Created MANAGER user");
-            }
 
-            // 3. Worker
-            if (userRepository.findByEmail("worker@wallet.com") == null) {
-                User worker = new User();
-                worker.setName("Worker User");
-                worker.setEmail("worker@wallet.com");
-                worker.setPassword(passwordEncoder.encode("1234"));
-                worker.setRole("ROLE_WORKER");
-                worker.setEnabled(true);
-                userRepository.save(worker);
-                logger.info("Created WORKER user");
-            }
-
-            // 4. Collaborator
-            if (userRepository.findByEmail("collab@wallet.com") == null) {
-                User collab = new User();
-                collab.setName("Collaborator User");
-                collab.setEmail("collab@wallet.com");
-                collab.setPassword(passwordEncoder.encode("1234"));
-                collab.setRole("ROLE_COLLABORATOR");
-                collab.setEnabled(true);
-                userRepository.save(collab);
-                logger.info("Created COLLABORATOR user");
-            }
 
             // 5. Demo User (Check by email to avoid duplicates)
             if (userRepository.findByEmail("demo@wallet.com") == null) {

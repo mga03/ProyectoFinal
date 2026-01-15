@@ -20,11 +20,13 @@ public class UserController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final com.wallet.secure.service.UserService userService;
 
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, com.wallet.secure.service.UserService userService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.userService = userService;
     }
 
     @GetMapping("/profile")
@@ -56,9 +58,8 @@ public class UserController {
                                     @AuthenticationPrincipal UserDetails currentUser,
                                     RedirectAttributes redirectAttributes) {
         try {
-            // Enviamos el correo al ADMIN (guarinosmanuel07@gmail.com)
-            // currentUser.getUsername() es el email del solicitante
-            emailService.sendAdminRoleRequest(currentUser.getUsername(), desiredRole);
+            // Usamos el servicio de usuario para generar token y enviar correo
+            userService.requestRoleChange(currentUser.getUsername(), desiredRole);
             
             redirectAttributes.addFlashAttribute("msg", "Solicitud enviada correctamente al Administrador.");
         } catch (Exception e) {

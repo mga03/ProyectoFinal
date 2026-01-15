@@ -66,9 +66,8 @@
                                 <div class="col-md-8">
                                     <label class="form-label">Rol Deseado</label>
                                     <select name="desiredRole" class="form-select" required>
-                                        <option value="ROLE_MANAGER">Gestor (Manager)</option>
-                                        <option value="ROLE_ADMIN">Administrador</option>
-                                        <option value="ROLE_COLLABORATOR">Colaborador</option>
+                                        <option th:if="${user.role == 'ROLE_ADMIN'}" value="ROLE_WORKER">Trabajador</option>
+                                        <option th:if="${user.role == 'ROLE_WORKER'}" value="ROLE_ADMIN">Administrador</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">

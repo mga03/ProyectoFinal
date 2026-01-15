@@ -116,4 +116,66 @@ public class UserService {
     }
 
 
+
+
+    // --- NUEVO: Gestión de roles con token (Stateless) ---
+    @Transactional
+    public void requestRoleChange(String email, String desiredRole) throws Exception {
+        User user = userRepository.findByEmail(email);
+        if (user == null) throw new Exception("Usuario no encontrado.");
+
+        String token = UUID.randomUUID().toString();
+        user.setRoleChangeToken(token);
+        user.setRequestedRole(desiredRole);
+        userRepository.save(user);
+
+        // Envía el correo con el token
+        emailService.sendAdminRoleRequest(user.getEmail(), desiredRole, token);
+    }
+
+    @Transactional
+    public void approveRoleChange(String token) throws Exception {
+        // Buscamos usuario por el token (necesitamos añadir el método al repositorio o buscar manualmente)
+        // Como no tenemos el método en repo aún, recuperamos por token lo añadiremos.
+        // HACK TEMPORAL: Buscar entre todos (ineficiente pero funciona para pocos users) o añadir metodo FindBy.
+        // Lo ideal es añadir findByRoleChangeToken en UserRepository.
+        
+        // Asumiendo que añadiremos el metodo al repo en el siguiente paso.
+        User user = userRepository.findByRoleChangeToken(token);
+        
+        if (user == null) {
+            throw new Exception("Token de solicitud inválido o no encontrado.");
+        }
+
+        if (user.getRequestedRole() == null) {
+             throw new Exception("No hay rol pendiente de aprobación.");
+        }
+
+        user.setRole(user.getRequestedRole());
+        user.setRoleChangeToken(null);
+        user.setRequestedRole(null);
+        
+        userRepository.save(user);
+        
+        emailService.sendRoleStatusEmail(user.getEmail(), "APROBADO", user.getRole());
+    }
+
+    @Transactional
+    public void rejectRoleChange(String token) throws Exception {
+        User user = userRepository.findByRoleChangeToken(token);
+        
+        if (user == null) {
+            throw new Exception("Token de solicitud inválido o no encontrado.");
+        }
+
+        // Limpiamos los campos de solicitud sin cambiar el rol
+        user.setRoleChangeToken(null);
+        user.setRequestedRole(null);
+        
+        userRepository.save(user);
+        
+        // Notificamos al usuario
+        emailService.sendRoleStatusEmail(user.getEmail(), "DENEGADO", user.getRole());
+    }
+
 }
