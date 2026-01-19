@@ -23,20 +23,36 @@ public class SecureApplication {
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            // 1. Admin
             // 1. SUPER ADMIN (El dueño del sistema)
             User superAdmin = userRepository.findByEmail("guarinosmanuel07@gmail.com");
+            
             if (superAdmin == null) {
+                // SOLO si no existe, lo creamos con la contraseña por defecto
                 superAdmin = new User();
                 superAdmin.setName("Manuel Guarinos (Super Admin)");
                 superAdmin.setEmail("guarinosmanuel07@gmail.com");
+                superAdmin.setPassword(passwordEncoder.encode("1234")); // Clave inicial
+                superAdmin.setRole("ROLE_ADMIN");
+                superAdmin.setEnabled(true);
+                userRepository.save(superAdmin);
+                logger.info("✅ SUPER ADMIN creado: guarinosmanuel07@gmail.com / 1234");
+            } else {
+                // Si YA existe, solo nos aseguramos de que siga siendo ADMIN, pero NO tocamos la contraseña
+                boolean changed = false;
+                if (!"ROLE_ADMIN".equals(superAdmin.getRole())) {
+                    superAdmin.setRole("ROLE_ADMIN");
+                    changed = true;
+                }
+                if (!superAdmin.isEnabled()) {
+                    superAdmin.setEnabled(true);
+                    changed = true;
+                }
+                
+                if (changed) {
+                    userRepository.save(superAdmin);
+                    logger.info("ℹ️ Permisos de Super Admin restaurados (Contraseña mantenida).");
+                }
             }
-            // Aseguramos que siempre sea Admin y tenga la clave conocida
-            superAdmin.setPassword(passwordEncoder.encode("1234"));
-            superAdmin.setRole("ROLE_ADMIN");
-            superAdmin.setEnabled(true);
-            userRepository.save(superAdmin);
-            logger.info("✅ SUPER ADMIN configurado: guarinosmanuel07@gmail.com / 1234");
 
 
 

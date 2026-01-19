@@ -78,8 +78,8 @@ public class UserService {
                 emailService.sendPasswordResetEmail(user.getEmail(), token);
             } catch (Exception e) {
                 // Si falla el correo, mostramos el link en consola para no bloquear al usuario
-                System.err.println("❌ ERROR CORREO RECUPERACIÓN: " + e.getMessage());
-                System.err.println("👉 LINK RECUPERACIÓN MANUAL (DEV):");
+                System.err.println("ERROR CORREO RECUPERACIÓN: " + e.getMessage());
+                System.err.println("LINK RECUPERACIÓN MANUAL (DEV):");
                 System.err.println("http://localhost:8081/reset-password?token=" + token);
             }
         }

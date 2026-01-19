@@ -21,7 +21,10 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/register/**", "/verify/**", "/forgot-password/**", "/reset-password/**", "/role-approval/**", "/css/**", "/js/**", "/api/**").permitAll()
                 
                 // Admin Area (Full Access)
-                .requestMatchers("/admin/**", "/delete/**", "/edit/**", "/new", "/save", "/support/**").hasRole("ADMIN")
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                // Insurance Management (Admin & Worker)
+                .requestMatchers("/new", "/save", "/edit/**", "/delete/**").hasAnyRole("ADMIN", "WORKER")
 
                 // All others (Dashboard, Details, Claims, etc) -> Authenticated (Consumers/Workers)
                 .anyRequest().authenticated()

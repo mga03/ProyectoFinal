@@ -47,4 +47,23 @@ public class SupportController {
         }
         return "redirect:/support?success";
     }
+
+    // PANEL DE SOPORTE PARA ADMIN (Ver todo)
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/tickets")
+    public String adminTickets(Model model) {
+        model.addAttribute("tickets", ticketRepository.findAllByOrderByCreatedAtDesc());
+        return "admin_tickets";
+    }
+
+    // ACCIÓN DE CERRAR TICKET (Admin)
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/tickets/close/{id}")
+    public String closeTicket(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        ticketRepository.findById(id).ifPresent(ticket -> {
+            ticket.setStatus(Ticket.Status.CLOSED);
+            ticketRepository.save(ticket);
+        });
+        return "redirect:/support/admin/tickets";
+    }
 }

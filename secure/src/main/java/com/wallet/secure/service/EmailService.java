@@ -37,7 +37,7 @@ public class EmailService {
         
         helper.setText(content, true);
         mailSender.send(message);
-        System.out.println("✅ Correo enviado a: " + recipientEmail);
+        System.out.println(" Correo enviado a: " + recipientEmail);
     }
     
     public void sendPasswordResetEmail(String recipientEmail, String token)
@@ -64,7 +64,7 @@ public class EmailService {
                 
         helper.setText(content, true);
         mailSender.send(message);
-        System.out.println("✅ Correo de recuperación enviado a: " + recipientEmail);
+        System.out.println("Correo de recuperación enviado a: " + recipientEmail);
     }
 
     // 1. Correo PARA EL ADMINISTRADOR (guarinosmanuel07@gmail.com)
@@ -89,13 +89,13 @@ public class EmailService {
                 + "<h3>Solicitud de Cambio de Rol</h3>"
                 + "<p>El usuario <b>" + userEmail + "</b> solicita ser: <b style='color:blue'>" + desiredRole + "</b></p>"
                 + "<p>¿Qué deseas hacer?</p>"
-                + "<a href='" + approveLink + "' style='padding:10px; background:green; color:white; text-decoration:none; border-radius:5px;'>ACEPTAR (Link Seguro)</a> "
+                + "<a href='" + approveLink + "' style='padding:10px; background:green; color:white; text-decoration:none; border-radius:5px;'>ACEPTAR</a> "
                 + "<a href='" + rejectLink + "' style='padding:10px; background:red; color:white; text-decoration:none; border-radius:5px; margin-left:10px;'>RECHAZAR</a>"
                 + "</body></html>";
 
         helper.setText(content, true);
         mailSender.send(message);
-        System.out.println("✅ Correo de solicitud enviado al ADMIN.");
+        System.out.println("Correo de solicitud enviado al ADMIN.");
     }
 
     // 2. Correo PARA EL USUARIO (Notificación de resultado)
@@ -120,6 +120,6 @@ public class EmailService {
 
         helper.setText(content, true);
         mailSender.send(message);
-        System.out.println("✅ Correo de estatus enviado al USUARIO: " + userEmail);
+        System.out.println("Correo de estatus enviado al USUARIO: " + userEmail);
     }
 }
