@@ -17,16 +17,18 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                // Public routes (authentication, registration, verification, password recovery, role approval)
+                // Rutas Públicas (Login, Registro, Estáticos...)
                 .requestMatchers("/login", "/register/**", "/verify/**", "/forgot-password/**", "/reset-password/**", "/role-approval/**", "/css/**", "/js/**", "/api/**").permitAll()
                 
-                // Admin Area (Full Access)
+                // 1. ZONA ADMIN (Exclusiva para gestión de usuarios y tickets globales)
                 .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                // Insurance Management (Admin & Worker)
-                .requestMatchers("/new", "/save", "/edit/**", "/delete/**").hasAnyRole("ADMIN", "WORKER")
+                // 2. ZONA OPERATIVA (Crear Seguros, Editar, Borrar, Soporte)
+                // Aquí es donde damos permiso a los TRABAJADORES (WORKER)
+                .requestMatchers("/new", "/save", "/edit/**", "/delete/**", "/support/**", "/insurances/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "WORKER")
 
-                // All others (Dashboard, Details, Claims, etc) -> Authenticated (Consumers/Workers)
+                // Resto de peticiones autenticadas
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

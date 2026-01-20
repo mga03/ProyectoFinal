@@ -30,10 +30,10 @@
         Registro exitoso. Inicia sesión.
     </div>
     <div th:if="${param.roleApproved}" class="alert alert-success text-center">
-        ✅ Rol aprobado correctamente. <br>Inicia sesión con tu nuevo rol.
+         Rol aprobado correctamente. <br>Inicia sesión con tu nuevo rol.
     </div>
     <div th:if="${param.roleRejected}" class="alert alert-danger text-center">
-        ❌ Solicitud de rol rechazada.
+         Solicitud de rol rechazada.
     </div>
 
     <form th:action="@{/login}" method="post">

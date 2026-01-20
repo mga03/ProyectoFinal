@@ -61,7 +61,13 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Teléfono Contacto</label>
-                                <input type="tel" class="form-control" th:field="*{phoneNumber}">
+                                <input type="tel" class="form-control" th:field="*{phoneNumber}"
+                                       maxlength="9"
+                                       pattern="[0-9]{9}"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                       th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid' : ''"
+                                       placeholder="Ej: 612345678">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}">Error</div>
                             </div>
                         </div>
                         

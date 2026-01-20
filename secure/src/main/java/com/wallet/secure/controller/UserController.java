@@ -31,23 +31,60 @@ public class UserController {
 
     @GetMapping("/profile")
     public String profile(Model model, @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails != null) {
-            User user = userRepository.findByEmail(userDetails.getUsername());
-            model.addAttribute("user", user);
+        // 1. SEGURIDAD: Si no hay credenciales, fuera.
+        if (userDetails == null) {
+            return "redirect:/login";
         }
+
+        // 2. CONSISTENCIA: Buscar el usuario real en la BD
+        User user = userRepository.findByEmail(userDetails.getUsername());
+        
+        // 3. CASO "ZOMBIE": Si la sesión existe pero el usuario fue borrado de la BD...
+        if (user == null) {
+            System.err.println("⚠️ Detectada sesión huérfana para: " + userDetails.getUsername());
+            // Redirigimos al logout para limpiar esa sesión corrupta
+            return "redirect:/login?logout"; 
+        }
+
+        // 4. Todo correcto: Cargamos el perfil
+        model.addAttribute("user", user);
         return "profile";
     }
 
     @PostMapping("/profile/update")
-    public String updateProfile(@ModelAttribute User userForm, @AuthenticationPrincipal UserDetails userDetails) {
+    public String updateProfile(@jakarta.validation.Valid @ModelAttribute("user") User userForm,
+                                org.springframework.validation.BindingResult result,
+                                @AuthenticationPrincipal UserDetails userDetails,
+                                Model model) {
+        
+        // 1. Recuperar el usuario real de la BD para no perder datos (id, rol, pass)
         User currentUser = userRepository.findByEmail(userDetails.getUsername());
+        
+        // 2. Comprobar errores de validación (ej: móvil "123")
+        if (result.hasErrors()) {
+            // Si falla, volvemos a la vista 'profile' mostrando los errores
+            // Restauramos el ID y Rol del usuario original para evitar errores en la vista
+            if (currentUser != null) {
+                userForm.setId(currentUser.getId());
+                userForm.setRole(currentUser.getRole());
+                userForm.setEmail(currentUser.getEmail()); // El email no se suele cambiar aquí o se valida aparte
+            }
+            return "profile"; 
+        }
+
+        // 3. Si todo es válido, actualizamos los campos
         if (currentUser != null && currentUser.getId().equals(userForm.getId())) {
             currentUser.setName(userForm.getName());
-            currentUser.setEmail(userForm.getEmail());
-            // Only update password if provided
+            // currentUser.setEmail(userForm.getEmail()); // Opcional: si permites cambiar email
+            
+            // ¡IMPORTANTE! Actualizar el móvil, que antes faltaba
+            currentUser.setMobile(userForm.getMobile());
+            
+            // Solo actualizamos contraseña si el usuario escribió algo nuevo
             if (userForm.getPassword() != null && !userForm.getPassword().isEmpty()) {
                 currentUser.setPassword(passwordEncoder.encode(userForm.getPassword()));
             }
+            
             userRepository.save(currentUser);
         }
         return "redirect:/profile?success";

@@ -22,7 +22,10 @@ public class Insurance {
     
     @jakarta.validation.constraints.NotNull(message = "La fecha es obligatoria")
     @jakarta.validation.constraints.Future(message = "La fecha debe ser futura")
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate expiryDate;
+
+    @jakarta.validation.constraints.Pattern(regexp = "[679][0-9]{8}", message = "El teléfono debe tener 9 dígitos y empezar por 6, 7 o 9")
     private String phoneNumber;
 
     @Column(columnDefinition = "TEXT")
