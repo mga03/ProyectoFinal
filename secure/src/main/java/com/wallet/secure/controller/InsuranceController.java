@@ -138,7 +138,7 @@ public class InsuranceController {
         User user = userRepository.findByEmail(userDetails.getUsername());
         insurance.setUser(user);
 
-        // Upload Logic
+        // Upload Logic (Se mantiene igual)
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
                 Path uploadPath = Paths.get(UPLOAD_DIR);
@@ -153,7 +153,6 @@ public class InsuranceController {
                 e.printStackTrace();
             }
         } else if (insurance.getId() != null) {
-             // Keep old image if editing
             Insurance old = insuranceRepository.findById(insurance.getId()).orElse(null);
             if (old != null && (insurance.getImageUrl() == null || insurance.getImageUrl().isEmpty())) {
                 insurance.setImageUrl(old.getImageUrl());
@@ -163,16 +162,16 @@ public class InsuranceController {
         boolean isNew = (insurance.getId() == null);
         Insurance savedInsurance = insuranceRepository.save(insurance);
 
-        // Generate Dummy Payments for New Insurance
+        // --- CORRECCIÓN AQUÍ: PAGO ÚNICO INICIAL ---
+        // Generar solo el pago del mes actual para nuevos seguros
+        // CORRECCIÓN: Generar SOLO el primer pago pendiente (sin historial falso)
         if (isNew && insurance.getPremiumAmount() != null) {
-            for (int i = 0; i < 5; i++) {
-                Payment p = new Payment();
-                p.setInsurance(savedInsurance);
-                p.setAmount(insurance.getPremiumAmount());
-                p.setPaymentDate(LocalDate.now().minusMonths(i));
-                p.setStatus(i == 0 ? Payment.Status.PENDING : Payment.Status.PAID);
-                paymentRepository.save(p);
-            }
+            Payment p = new Payment();
+            p.setInsurance(savedInsurance); // Vinculamos con el seguro
+            p.setAmount(insurance.getPremiumAmount()); // El precio que has puesto
+            p.setPaymentDate(LocalDate.now()); // Fecha: HOY
+            p.setStatus(Payment.Status.PENDING); // Estado: PENDIENTE DE PAGO
+            paymentRepository.save(p);
         }
 
         return "redirect:/";
@@ -199,16 +198,26 @@ public class InsuranceController {
         return "redirect:/";
     }
 
-    @PostMapping("/insurance/{id}/claims/save")
+   @PostMapping("/insurance/{id}/claims/save")
     public String saveClaim(@PathVariable Long id, @ModelAttribute Claim claim, @AuthenticationPrincipal UserDetails userDetails) {
         try {
+            // 1. Buscamos el seguro "Padre"
             Insurance insurance = insuranceRepository.findById(id).orElse(null);
+            
+            // 2. Verificamos que sea del usuario actual
             if (insurance != null && insurance.getUser().getEmail().equals(userDetails.getUsername())) {
+                
+                // 3. VINCULACIÓN BIDIRECCIONAL (La Clave del arreglo)
+                // Le decimos al siniestro quién es su seguro
                 claim.setInsurance(insurance);
-                claimRepository.save(claim);
+                // Le decimos al seguro que tiene un nuevo siniestro en su lista
+                insurance.getClaims().add(claim);
+                
+                // 4. Guardamos EL SEGURO (Esto guardará el siniestro automáticamente gracias a CascadeType.ALL)
+                insuranceRepository.save(insurance);
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Log error
+            e.printStackTrace();
             return "redirect:/insurance/" + id + "/details?error=claim_failed";
         }
         return "redirect:/insurance/" + id + "/details?success=claim_saved";
