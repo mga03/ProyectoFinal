@@ -48,10 +48,10 @@ public class AdminController {
             User user = userRepository.findByEmail(email);
             
             if (user == null) {
-                System.err.println("❌ Usuario no encontrado: " + email);
+                System.err.println(" Usuario no encontrado: " + email);
                 throw new Exception("El usuario con email " + email + " no existe.");
             }
-            System.out.println("✅ Usuario encontrado. Rol actual: " + user.getRole());
+            System.out.println(" Usuario encontrado. Rol actual: " + user.getRole());
 
             if ("approve".equals(action)) {
                 if (role == null || role.isEmpty()) {
@@ -61,9 +61,9 @@ public class AdminController {
                 // PROTECCIÓN: No degradar al último administrador
                 if ("ROLE_ADMIN".equals(user.getRole()) && !"ROLE_ADMIN".equals(role)) {
                     long adminCount = userRepository.countByRole("ROLE_ADMIN");
-                    System.out.println("🛡️ Verificando admins restantes. Total actual: " + adminCount);
+                    System.out.println(" Verificando admins restantes. Total actual: " + adminCount);
                     if (adminCount <= 1) {
-                        throw new Exception("⚠️ PREVENCIÓN DE BLOQUEO: No puedes quitarle el rol de Administrador al único Administrador del sistema.");
+                        throw new Exception(" PREVENCIÓN DE BLOQUEO: No puedes quitarle el rol de Administrador al único Administrador del sistema.");
                     }
                 }
 
@@ -75,16 +75,16 @@ public class AdminController {
                 try {
                     emailService.sendRoleStatusEmail(email, "APROBADO", role);
                 } catch (Exception e) {
-                    System.err.println("⚠️ Error enviando email de confirmación: " + e.getMessage());
+                    System.err.println(" Error enviando email de confirmación: " + e.getMessage());
                     // No relanzamos para no interrumpir el flujo exitoso
                 }
                 
-                redirectAttributes.addFlashAttribute("msg", "✅ ¡Éxito! Rol de " + user.getName() + " actualizado a " + role);
+                redirectAttributes.addFlashAttribute("msg", " ¡Éxito! Rol de " + user.getName() + " actualizado a " + role);
                 
             } else if ("reject".equals(action)) {
                 // Avisar al usuario del rechazo
                 emailService.sendRoleStatusEmail(email, "DENEGADO", "");
-                redirectAttributes.addFlashAttribute("error", "❌ Solicitud rechazada correctamente.");
+                redirectAttributes.addFlashAttribute("error", " Solicitud rechazada correctamente.");
             }
 
         } catch (Exception e) {
@@ -104,26 +104,36 @@ public class AdminController {
         return "admin_users";
     }
 
-    @GetMapping("/users/delete/{id}")
-    public String deleteUser(@PathVariable Long id) {
+   @GetMapping("/users/delete/{id}")
+    public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         Optional<User> userOptional = userRepository.findById(id);
         
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             
-            // Protect last admin
+            // ---  PROTECCIÓN 1: SUPER ADMIN (TÚ) ERES INTOCABLE ---
+            // Si el email es el tuyo, se cancela todo inmediatamente.
+            if (user.getEmail().trim().equalsIgnoreCase("guarinosmanuel07@gmail.com")) {
+                logger.warn(" INTENTO DE BORRADO DEL SUPER ADMIN BLOQUEADO: {}", user.getEmail());
+                // Redirigimos con un aviso especial
+                return "redirect:/admin/users?errorSuperAdmin"; 
+            }
+
+            // ---  PROTECCIÓN 2: EL ÚLTIMO ADMINISTRADOR ---
+            // Si intentan borrar a un admin, contamos cuántos quedan.
             if ("ROLE_ADMIN".equals(user.getRole())) {
                  long adminCount = userRepository.countByRole("ROLE_ADMIN");
                  if (adminCount <= 1) {
-                     logger.warn("Intento de eliminar al ultimo administrador: {}", user.getEmail());
+                     logger.warn(" PREVENCIÓN: Intento de eliminar al último administrador: {}", user.getEmail());
                      return "redirect:/admin/users?errorLastAdmin";
                  }
             }
             
+            // Si pasa las protecciones, se borra
             userRepository.deleteById(id);
-            logger.info("Usuario eliminado por admin ID {}: {}", id, user.getEmail());
+            logger.info(" Usuario eliminado por admin ID {}: {}", id, user.getEmail());
         } else {
-             logger.warn("Intento de eliminar usuario inexistente ID: {}", id);
+             logger.warn(" Intento de eliminar usuario inexistente ID: {}", id);
         }
 
         return "redirect:/admin/users?success";

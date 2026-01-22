@@ -38,22 +38,27 @@
                 </thead>
                 <tbody>
                     <tr th:each="user : ${users}">
-                        <td th:text="${user.id}">1</td>
-                        <td th:text="${user.name}">John Doe</td>
-                        <td th:text="${user.email}">john@example.com</td>
-                        <td>
-                            <span class="badge" 
-                                  th:classappend="${user.role == 'ROLE_ADMIN' ? 'bg-danger' : (user.role == 'ROLE_MANAGER' ? 'bg-warning text-dark' : 'bg-info text-dark')}"
-                                  th:text="${user.role}">ROLE_USER</span>
-                        </td>
-                        <td>
-                            <a th:href="@{/admin/users/delete/{id}(id=${user.id})}" 
-                               class="btn btn-sm btn-danger"
-                               onclick="return confirm('¿Estás seguro de eliminar este usuario?');">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </a>
-                        </td>
-                    </tr>
+    <td th:text="${user.id}">1</td>
+    <td th:text="${user.name}">John Doe</td>
+    <td th:text="${user.email}">john@example.com</td>
+    <td>
+        <span class="badge" 
+              th:classappend="${user.role == 'ROLE_ADMIN' ? 'bg-danger' : (user.role == 'ROLE_MANAGER' ? 'bg-warning text-dark' : 'bg-info text-dark')}"
+              th:text="${user.role}">ROLE_USER</span>
+    </td>
+    <td>
+        <span th:if="${user.email == 'guarinosmanuel07@gmail.com'}" class="badge bg-secondary">
+            <i class="bi bi-shield-lock-fill"></i> Protegido
+        </span>
+
+        <a th:unless="${user.email == 'guarinosmanuel07@gmail.com'}"
+           th:href="@{/admin/users/delete/{id}(id=${user.id})}" 
+           class="btn btn-sm btn-danger"
+           onclick="return confirm('¿Estás seguro de eliminar este usuario?');">
+            <i class="bi bi-trash"></i> Eliminar
+        </a>
+    </td>
+</tr>
                 </tbody>
             </table>
         </div>
