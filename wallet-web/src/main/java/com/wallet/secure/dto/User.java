@@ -1,100 +1,62 @@
 package com.wallet.secure.dto;
 
-import jakarta.validation.constraints.Pattern;
-import java.util.ArrayList;
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-public class User {
+import java.util.Collection;
+import java.util.Collections;
 
+// IMPLEMENTAMOS UserDetails PARA QUE SPRING LO ENTIENDA
+public class User implements UserDetails {
+    
     private Long id;
-
     private String name;
     private String email;
     private String password;
-
-    private String role;
-
-    private boolean enabled = false;
-
-    private String verificationCode;
-
-    private String resetToken;
-
-    @Pattern(regexp = "[679][0-9]{8}", message = "Móvil inválido")
     private String mobile;
-
-    @JsonIgnore
-    private List<Insurance> insurances = new ArrayList<>();
-
-    @JsonIgnore
-    private List<Ticket> tickets = new ArrayList<>();
-
-    // Token de Aprobación de Rol (Evita necesidad de login del Admin)
-    @JsonIgnore
-    private String roleChangeToken;
+    private String role;
+    private boolean enabled;
     
-    @JsonIgnore
-    private String requestedRole;
-
-    // Constructors
-    public User() {}
-
-    public User(String name, String email, String password, String role) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-    }
-
-    // Getters and Setters
+    // --- Getters y Setters normales ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-
-    public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-
-    public String getRole() { return role; }
-
-    public void setRole(String role) { this.role = role; }
-
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-
-    public String getVerificationCode() { return verificationCode; }
-    public void setVerificationCode(String verificationCode) { this.verificationCode = verificationCode; }
-
-    public String getResetToken() { return resetToken; }
-    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
-
     public String getMobile() { return mobile; }
     public void setMobile(String mobile) { this.mobile = mobile; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
-    public List<Insurance> getInsurances() { return insurances; }
-    public void setInsurances(List<Insurance> insurances) { 
-        this.insurances = insurances; 
-    }
-
-    public List<Ticket> getTickets() { return tickets; }
-    public void setTickets(List<Ticket> tickets) { 
-        this.tickets = tickets; 
-    }
-
-    public String getRoleChangeToken() { return roleChangeToken; }
-    public void setRoleChangeToken(String roleChangeToken) { this.roleChangeToken = roleChangeToken; }
-
-    public String getRequestedRole() { return requestedRole; }
-    public void setRequestedRole(String requestedRole) { this.requestedRole = requestedRole; }
+    // --- MÉTODOS OBLIGATORIOS DE SPRING SECURITY (UserDetails) ---
     
-    // Helper method to add insurance
-    public void addInsurance(Insurance insurance) {
-        insurances.add(insurance);
-        insurance.setUser(this);
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (role == null) return Collections.emptyList();
+        // Aseguramos que el rol tenga el prefijo ROLE_
+        String roleName = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+        return Collections.singletonList(new SimpleGrantedAuthority(roleName));
     }
+
+    @Override
+    public String getPassword() { return password; }
+
+    @Override // ¡IMPORTANTE! El username para Spring será el EMAIL
+    public String getUsername() { return email; }
+
+    @Override
+    public boolean isAccountNonExpired() { return true; }
+
+    @Override
+    public boolean isAccountNonLocked() { return true; }
+
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
+
+    @Override
+    public boolean isEnabled() { return enabled; }
 }

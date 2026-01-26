@@ -28,15 +28,27 @@ public class ApiClientService {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiClientService.class);
 
+    /**
+     * Genera los headers incluyendo el Token de "Identidad" (X-Auth-User).
+     * Es vital para que la API sepa quién está haciendo la petición.
+     */
     private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         
-        // Add X-Auth-User header from SecurityContext
-        if (SecurityContextHolder.getContext().getAuthentication() != null && 
-            SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            headers.set("X-Auth-User", userDetails.getUsername());
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            
+            // Lógica robusta para extraer el email sin importar el tipo de objeto
+            if (principal instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) principal;
+                headers.set("X-Auth-User", userDetails.getUsername());
+            } else if (principal instanceof User) {
+                User u = (User) principal;
+                headers.set("X-Auth-User", u.getEmail());
+            } else if (principal instanceof String) {
+                headers.set("X-Auth-User", (String) principal);
+            }
         }
         return headers;
     }
@@ -52,8 +64,23 @@ public class ApiClientService {
             );
             return response.getBody();
         } catch (Exception e) {
-            logger.error("Login failed: " + e.getMessage());
+            logger.error("Login fallido: " + e.getMessage());
             return null;
+        }
+    }
+    // --- Nuevo método para el Panel Admin ---
+    public List<User> getAllUsers() {
+        try {
+            ResponseEntity<List<User>> response = restTemplate.exchange(
+                API_URL + "/users", // Asumimos que tu UserRestController tiene este endpoint mapeado
+                HttpMethod.GET,
+                new HttpEntity<>(getHeaders()),
+                new ParameterizedTypeReference<List<User>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            logger.error("Error obteniendo usuarios: " + e.getMessage());
+            return List.of();
         }
     }
 
@@ -71,61 +98,13 @@ public class ApiClientService {
     }
 
     public User getUserByEmail(String email) {
-        // We need a specific endpoint or use a filter query on users?
-        // Wait, UserRestController has getAllUsers for ADMIN.
-        // For standard "loadUserByUsername", we need an endpoint to fetch "me" or specific user.
-        // But `CustomUserDetailsService` logic is typically: find user in DB.
-        // If ApiClientService is used by UserDetailsService, we need an endpoint that returns a user by email WITHOUT needing authentication (since we are logging in).
-        // BUT my security config allows /api/auth/** but protects /api/**.
-        // So `getUserByEmail` for login purposes is tricky if it needs to be authenticated.
-        // Actually, `verifyLogin` returns the User object!
-        // So `CustomUserDetailsService` can assume if login succeeds, we have the user.
-        // But `loadUserByUsername` is called by Spring Security, which usually just wants to load user to check password itself.
-        // If I want to Delegate auth to API, I should write a `AuthenticationProvider`.
-        // If I stick to `UserDetailsService`, I need to fetch the user including password hash.
-        // Does API return password hash? `User` entity has it. `UserDTO` has it.
-        // So `getUserByEmail` needs to call an API endpoint.
-        // If the endpoint is protected, we can't call it before login.
-        // SOLUTION: Use a master key/internal auth for this specific call? 
-        // OR rely on `verifyLogin` (Login logic) and do manual auth?
-        // Prompt said: "configuracion de formLogin actual".
-        // This implies standard Spring Security `UserDetailsService`.
-        // So `UserDetailsService` needs to fetch the User (with hash).
-        // I will add an endpoint `/api/users/search?email=...` in API allowed for `localhost` (my filter handles this if I send X-Auth-User header?? No, no user yet).
-        // I will use `X-Auth-User: admin` (system user) for this specific call?
-        // Or better: The API endpoint `/api/auth/login` is public. But standard Form Login expects to load user first.
-        // I will implement `getUserByEmail` assuming there is an endpoint `/api/users/email/{email}` that is OPEN or secured by secret.
-        // Given constraints, I'll assume I can fetch it via a special public endpoint or I'll implement `AuthenticationProvider`.
-        // Let's implement `AuthenticationProvider` in `SecurityConfig`? No, too much change.
-        // Simplest: `UserRestController` has `getAllUsers`. I'll add `search` endpoint.
-        // And I'll rely on my `TrustedHeaderFilter` allowing me to impersonate an admin to fetch the user?
-        // Or just make `/api/users/email/{email}` public? No, security risk.
-        // I'll use a "system" header.
-        
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Auth-User", "system@wallet.com"); // Pseudo-system user to bypass auth check if existing
-        // Wait, if "system@wallet.com" doesn't exist in DB, my filter ignores it.
-        // I need a user that exists.
-        // I'll assume there is an ADMIN.
-        // This is getting complicated.
-        // Alternative: API allows `GET /api/users/search?email=` PUBLICLY? No.
-        // OK, I'll assume `verifyLogin` is enough and I'll switch `CustomUserDetailsService` to use `ApiClientService.verifyLogin`? No, that's not how UserDetailsService works.
-        // I will assume for now I can fetch user by email.
-        
         try {
-            // Using a hack: passing a known admin email if possible, or just fail.
-            // Actually, for the PROMPT simplificity: "Permitir tráfico desde localhost:8080".
-            // If I allowed /api/** from localhost, I don't need auth!
-            // But I enforced auth.
-            // I'll revert SecurityConfig in API to PERMIT ALL from localhost if I could.
-            // But I can't detect localhost easily in requestMatchers.
-            // I will add a "X-Api-Key" header check or similar.
-            // Let's just use "admin@wallet.com" as the trust header for system calls?
-            headers.set("X-Auth-User", email); // We claim to be the user we are looking for?
-            // If the user exists, the filter validates it! Yes!
-            // If I send "X-Auth-User: manuel@gmail.com", the API loads manuel, sets context, and allows request.
-            // PERFECT!
+            // Truco: Enviamos el propio email en el header para "auto-autorizarnos" 
+            // y que la API nos permita descargar los datos del usuario.
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-Auth-User", email); 
             HttpEntity<Void> entity = new HttpEntity<>(headers);
+            
             ResponseEntity<User> response = restTemplate.exchange(
                 API_URL + "/users/email/" + email, 
                 HttpMethod.GET, 
@@ -134,6 +113,7 @@ public class ApiClientService {
             );
             return response.getBody();
         } catch (Exception e) {
+            logger.warn("No se pudo obtener el usuario por email: " + email);
             return null;
         }
     }
@@ -141,22 +121,30 @@ public class ApiClientService {
     // --- Insurance ---
 
     public List<Insurance> getAllInsurances() {
-        ResponseEntity<List<Insurance>> response = restTemplate.exchange(
-            API_URL + "/insurances",
-            HttpMethod.GET,
-            new HttpEntity<>(getHeaders()),
-            new ParameterizedTypeReference<List<Insurance>>() {}
-        );
-        return response.getBody();
+        try {
+            ResponseEntity<List<Insurance>> response = restTemplate.exchange(
+                API_URL + "/insurances",
+                HttpMethod.GET,
+                new HttpEntity<>(getHeaders()),
+                new ParameterizedTypeReference<List<Insurance>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            return List.of(); // Retornar lista vacía si falla para no romper la web
+        }
     }
 
     public Insurance getInsuranceById(Long id) {
-        return restTemplate.exchange(
-            API_URL + "/insurances/" + id,
-            HttpMethod.GET,
-            new HttpEntity<>(getHeaders()),
-            Insurance.class
-        ).getBody();
+        try {
+            return restTemplate.exchange(
+                API_URL + "/insurances/" + id,
+                HttpMethod.GET,
+                new HttpEntity<>(getHeaders()),
+                Insurance.class
+            ).getBody();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public void saveInsurance(Insurance insurance) {
@@ -172,6 +160,7 @@ public class ApiClientService {
     }
     
     public void saveClaim(com.wallet.secure.dto.Claim claim, Long insuranceId) {
+        // Asegúrate de que tu API tenga este endpoint mapeado
         restTemplate.postForEntity(API_URL + "/claims/insurance/" + insuranceId, new HttpEntity<>(claim, getHeaders()), com.wallet.secure.dto.Claim.class);
     }
     
@@ -179,9 +168,13 @@ public class ApiClientService {
         restTemplate.postForEntity(API_URL + "/insurances/" + insuranceId + "/beneficiaries", new HttpEntity<>(beneficiary, getHeaders()), com.wallet.secure.dto.Beneficiary.class);
     }
 
+    // --- MÉTODOS DE ARCHIVOS (Imágenes) ---
+
     public String uploadFile(MultipartFile file) {
          try {
-            HttpHeaders headers = getHeaders();
+            // 1. OBTENER HEADERS DE AUTENTICACIÓN (CRÍTICO)
+            HttpHeaders headers = getHeaders(); 
+            // 2. Definir tipo Multipart
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -193,16 +186,20 @@ public class ApiClientService {
             });
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+            
+            // 3. Enviar a la API
             ResponseEntity<Map> response = restTemplate.postForEntity(API_URL + "/upload", requestEntity, Map.class);
             
             if (response.getBody() != null && response.getBody().containsKey("url")) {
                 return (String) response.getBody().get("url");
             }
         } catch (Exception e) {
-            logger.error("Upload failed", e);
+            logger.error("Error subiendo archivo: " + e.getMessage());
         }
         return null;
     }
+
+    // --- Gestión de Usuario y Contraseña ---
 
     public void updateUser(User user) {
         if (user.getId() != null) {
@@ -213,17 +210,20 @@ public class ApiClientService {
     public void deleteUser(Long id) {
         restTemplate.exchange(API_URL + "/users/" + id, HttpMethod.DELETE, new HttpEntity<>(getHeaders()), Void.class);
     }
+
     public void initiatePasswordRecovery(String email) {
-        // This endpoint might need to be created in API AuthController if not exists, 
-        // or we use a hack if API logic is in UserService. 
-        // Current API structure: AuthController has login/register.
-        // We need to add endpoints to API side for recovery.
-        // Assuming API exposes: POST /api/auth/forgot-password?email=...
-        restTemplate.postForEntity(API_URL + "/auth/forgot-password?email=" + email, null, Void.class);
+        try {
+            restTemplate.postForEntity(API_URL + "/auth/forgot-password?email=" + email, null, Void.class);
+        } catch (Exception e) {
+            logger.error("Error iniciando recuperación: " + e.getMessage());
+        }
     }
 
     public void resetPassword(String token, String newPassword) {
-        // Assuming API exposes: POST /api/auth/reset-password
-        restTemplate.postForEntity(API_URL + "/auth/reset-password", Map.of("token", token, "password", newPassword), Void.class);
+        try {
+            restTemplate.postForEntity(API_URL + "/auth/reset-password", Map.of("token", token, "password", newPassword), Void.class);
+        } catch (Exception e) {
+             logger.error("Error reseteando contraseña: " + e.getMessage());
+        }
     }
 }

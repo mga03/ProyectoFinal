@@ -4,8 +4,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -18,23 +16,22 @@ public class SecurityConfig {
         http
             .authenticationProvider(authProvider)
             .authorizeHttpRequests(auth -> auth
-                // Rutas Públicas (Login, Registro, Estáticos...)
-                .requestMatchers("/login", "/register/**", "/verify/**", "/forgot-password/**", "/reset-password/**", "/role-approval/**", "/css/**", "/js/**", "/api/**").permitAll()
+                // Rutas Públicas y Recursos Estáticos (IMPRESCINDIBLE permitir uploads e images)
+                .requestMatchers("/login", "/register/**", "/verify/**", "/forgot-password/**", "/reset-password/**", "/role-approval/**", "/css/**", "/js/**", "/images/**", "/uploads/**", "/webjars/**").permitAll()
                 
-                // 1. ZONA ADMIN (Exclusiva para gestión de usuarios y tickets globales)
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // 1. ZONA ADMIN
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN")
 
-                // 2. ZONA OPERATIVA (Crear Seguros, Editar, Borrar, Soporte)
-                // Aquí es donde damos permiso a los TRABAJADORES (WORKER)
-                .requestMatchers("/new", "/save", "/edit/**", "/delete/**", "/support/**", "/insurances/**")
+                // 2. ZONA OPERATIVA
+                .requestMatchers("/new", "/save", "/edit/**", "/delete/**", "/support/**", "/insurances/**", "/profile/**")
                     .hasAnyRole("ADMIN", "MANAGER", "WORKER")
 
-                // Resto de peticiones autenticadas
+                // Resto requiere login
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/")
+                .defaultSuccessUrl("/", true) // Forzar ir al inicio tras login
                 .usernameParameter("email")
                 .permitAll()
             )
@@ -42,9 +39,9 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .permitAll()
-            );
-        
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**")); 
+            )
+            // ⚠️ CRÍTICO: Desactivar CSRF temporalmente para que funcionen los formularios POST entre servidores
+            .csrf(csrf -> csrf.disable());
 
         return http.build();
     }

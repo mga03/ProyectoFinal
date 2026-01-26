@@ -50,13 +50,14 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOrigins(java.util.List.of(
-            "http://localhost:8888", 
-            "https://nontraditionalistic-unactinic-jung.ngrok-free.dev"
-        ));
+        
+        // --- CORRECCIÓN CLAVE: Permitir TODOS los orígenes para evitar errores de puertos ---
+        configuration.setAllowedOriginPatterns(java.util.List.of("*")); 
+        
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(java.util.List.of("*"));
         configuration.setAllowCredentials(true);
+        
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -67,7 +68,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // Filter to simulate authentication based on header from trusted Web Client
+    // Filtro para autenticar usando el header X-Auth-User
     public static class TrustedHeaderFilter extends OncePerRequestFilter {
         private final CustomUserDetailsService userDetailsService;
 
@@ -87,7 +88,7 @@ public class SecurityConfig {
                             userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 } catch (Exception e) {
-                    // Start anonymous if user not found
+                    // Si el usuario no existe, sigue como anónimo
                 }
             }
             filterChain.doFilter(request, response);

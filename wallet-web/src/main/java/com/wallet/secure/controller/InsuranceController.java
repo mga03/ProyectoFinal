@@ -2,6 +2,8 @@ package com.wallet.secure.controller;
 
 import com.wallet.secure.dto.*;
 import com.wallet.secure.service.ApiClientService;
+import com.wallet.secure.service.PdfService; // <--- IMPORTANTE
+import jakarta.servlet.http.HttpServletResponse; // <--- IMPORTANTE
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -9,8 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.validation.BindingResult;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,9 +21,11 @@ import java.util.stream.Collectors;
 public class InsuranceController {
 
     private final ApiClientService apiClientService;
+    private final PdfService pdfService; // <--- Nuevo servicio inyectado
 
-    public InsuranceController(ApiClientService apiClientService) {
+    public InsuranceController(ApiClientService apiClientService, PdfService pdfService) {
         this.apiClientService = apiClientService;
+        this.pdfService = pdfService;
     }
 
     @GetMapping("/")
@@ -31,8 +35,6 @@ public class InsuranceController {
                         @RequestParam(required = false) String category) {
         
         if (userDetails != null) {
-            // Note: Pagination handled on client side or API needs pagination params support.
-            // For now fetching all and filtering in memory or displaying all as per instruction "simple decoupling".
             List<Insurance> allInsurances = apiClientService.getAllInsurances();
             User user = apiClientService.getUserByEmail(userDetails.getUsername());
             
@@ -47,8 +49,7 @@ public class InsuranceController {
             
             model.addAttribute("expiringCount", expiringThisMonth);
             model.addAttribute("activeCount", activeCount);
-            
-            model.addAttribute("insurances", allInsurances); // Sending full list logic for now
+            model.addAttribute("insurances", allInsurances);
             model.addAttribute("user", user);
         }
         return "index";
@@ -86,10 +87,8 @@ public class InsuranceController {
             }
         } else if (insurance.getId() != null) {
              Insurance old = apiClientService.getInsuranceById(insurance.getId());
-             if (old != null) {
-                 if (insurance.getImageUrl() == null || insurance.getImageUrl().isEmpty()) {
-                     insurance.setImageUrl(old.getImageUrl());
-                 }
+             if (old != null && (insurance.getImageUrl() == null || insurance.getImageUrl().isEmpty())) {
+                 insurance.setImageUrl(old.getImageUrl());
              }
         }
         
@@ -127,11 +126,18 @@ public class InsuranceController {
         return "redirect:/insurance/" + id + "/details?success=beneficiary_saved";
     }
 
+    // --- AQUÍ ESTÁ LA MAGIA DEL PDF ---
     @GetMapping("/insurances/export/pdf")
-    public void exportToPDF(jakarta.servlet.http.HttpServletResponse response, @AuthenticationPrincipal UserDetails userDetails) {
-         // Not implemented via API in this scope, requires downloading PDF from API or generating it here from DTOs.
-         // PDF generation was locally in PdfService. I deleted PdfService? No.
-         // If PdfService exists in Web, I can use it with DTOs.
-         // Assuming PdfService is updated to use DTOs.
+    public void exportToPDF(HttpServletResponse response, @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+        response.setContentType("application/pdf");
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=mis_seguros.pdf";
+        response.setHeader(headerKey, headerValue);
+
+        // 1. Pedimos los datos actualizados a la API
+        List<Insurance> listInsurances = apiClientService.getAllInsurances();
+
+        // 2. Usamos el PdfService (que ya tienes creado) para generar el archivo
+        pdfService.export(response, listInsurances);
     }
 }
