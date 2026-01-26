@@ -13,17 +13,25 @@ import org.springframework.security.web.SecurityFilterChain;
 @org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
-   @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http, com.wallet.secure.security.ApiAuthenticationProvider authProvider) throws Exception {
         http
-            // 👇 ¡AÑADE ESTA LÍNEA AQUÍ! 👇
-            .cors(org.springframework.security.config.Customizer.withDefaults()) 
-            
+            .authenticationProvider(authProvider)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/register/**", "/verify/**", "/css/**", "/js/**", "/api/**").permitAll()
+                // Rutas Públicas (Login, Registro, Estáticos...)
+                .requestMatchers("/login", "/register/**", "/verify/**", "/forgot-password/**", "/reset-password/**", "/role-approval/**", "/css/**", "/js/**", "/api/**").permitAll()
+                
+                // 1. ZONA ADMIN (Exclusiva para gestión de usuarios y tickets globales)
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                // 2. ZONA OPERATIVA (Crear Seguros, Editar, Borrar, Soporte)
+                // Aquí es donde damos permiso a los TRABAJADORES (WORKER)
+                .requestMatchers("/new", "/save", "/edit/**", "/delete/**", "/support/**", "/insurances/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "WORKER")
+
+                // Resto de peticiones autenticadas
                 .anyRequest().authenticated()
             )
-            // ... resto de tu código igual ...
             .formLogin(form -> form
                 .loginPage("/login")
                 .defaultSuccessUrl("/")
@@ -36,14 +44,8 @@ public class SecurityConfig {
                 .permitAll()
             );
         
-        // Ensure H2 console or API works if needed, but for now standard config
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**")); // Disable CSRF for API simplicity
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**")); 
 
         return http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }

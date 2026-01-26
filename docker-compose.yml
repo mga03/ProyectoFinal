@@ -1,0 +1,36 @@
+services:
+  mysql_db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wallet_secure_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  wallet-api:
+    build: ./wallet-api
+    depends_on:
+      - mysql_db
+    ports:
+      - "8889:8081"
+    environment:
+      DB_URL: jdbc:mysql://mysql_db:3306/wallet_secure_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    volumes:
+      - ./wallet-api/uploads:/app/uploads
+
+  wallet-web:
+    build: ./wallet-web
+    depends_on:
+      - wallet-api
+    ports:
+      - "8888:8080"
+    environment:
+      APP_API_URL: http://wallet-api:8081/api
+
+volumes:
+  mysql_data:
