@@ -39,7 +39,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/upload/**", "/uploads/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/upload/**", "/uploads/**", "/api/users/approve-role", "/api/users/reject-role").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(new TrustedHeaderFilter(userDetailsService), UsernamePasswordAuthenticationFilter.class);

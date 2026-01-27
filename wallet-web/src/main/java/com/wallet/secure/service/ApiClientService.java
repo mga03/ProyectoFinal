@@ -235,23 +235,31 @@ public class ApiClientService {
         }
     }
 
-    public boolean approveRoleChange(String token) {
+    public String approveRoleChange(String token) {
         try {
             restTemplate.postForEntity(API_URL + "/users/approve-role?token=" + token, new HttpEntity<>(getHeaders()), Void.class);
-            return true;
+            return null; // Success
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            String serverError = e.getResponseBodyAsString();
+            logger.error("Error aprobando rol (Server): " + serverError);
+            return serverError.isEmpty() ? e.getMessage() : serverError;
         } catch (Exception e) {
             logger.error("Error aprobando rol: " + e.getMessage());
-            return false;
+            return "Error de conexión: " + e.getMessage();
         }
     }
 
-    public boolean rejectRoleChange(String token) {
+    public String rejectRoleChange(String token) {
         try {
             restTemplate.postForEntity(API_URL + "/users/reject-role?token=" + token, new HttpEntity<>(getHeaders()), Void.class);
-            return true;
+            return null; // Success
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            String serverError = e.getResponseBodyAsString();
+            logger.error("Error rechazando rol (Server): " + serverError);
+            return serverError.isEmpty() ? e.getMessage() : serverError;
         } catch (Exception e) {
             logger.error("Error rechazando rol: " + e.getMessage());
-            return false;
+            return "Error de conexión: " + e.getMessage();
         }
     }
 

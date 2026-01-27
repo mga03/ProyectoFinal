@@ -17,12 +17,12 @@ public class RoleApprovalController {
 
     @GetMapping("/role-approval/approve")
     public String approveRole(@RequestParam String token, Model model) {
-        boolean success = apiClientService.approveRoleChange(token);
-        if (success) {
+        String error = apiClientService.approveRoleChange(token);
+        if (error == null) {
             model.addAttribute("message", "La solicitud de rol ha sido APROBADA exitosamente.");
             model.addAttribute("title", "¡Operación Exitosa!");
         } else {
-            model.addAttribute("message", "No se pudo aprobar la solicitud. El token puede ser inválido o haber expirado.");
+            model.addAttribute("message", "Error: " + error);
             model.addAttribute("title", "Error");
         }
         return "role-result";
@@ -30,12 +30,12 @@ public class RoleApprovalController {
 
     @GetMapping("/role-approval/reject")
     public String rejectRole(@RequestParam String token, Model model) {
-        boolean success = apiClientService.rejectRoleChange(token);
-        if (success) {
+        String error = apiClientService.rejectRoleChange(token);
+        if (error == null) {
             model.addAttribute("message", "La solicitud de rol ha sido RECHAZADA.");
             model.addAttribute("title", "Operación Completada");
         } else {
-            model.addAttribute("message", "No se pudo rechazar la solicitud. El token puede ser inválido o haber expirado.");
+            model.addAttribute("message", "Error: " + error);
             model.addAttribute("title", "Error");
         }
         return "role-result";

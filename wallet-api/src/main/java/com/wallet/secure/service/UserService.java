@@ -139,19 +139,23 @@ public class UserService {
 
     @Transactional
     public void approveRoleChange(String token) throws Exception {
-        // Buscamos usuario por el token (necesitamos añadir el método al repositorio o buscar manualmente)
-        // Como no tenemos el método en repo aún, recuperamos por token lo añadiremos.
-        // HACK TEMPORAL: Buscar entre todos (ineficiente pero funciona para pocos users) o añadir metodo FindBy.
-        // Lo ideal es añadir findByRoleChangeToken en UserRepository.
+        System.out.println("DEBUG: Intentando aprobar rol con token: " + token);
         
-        // Asumiendo que añadiremos el metodo al repo en el siguiente paso.
         User user = userRepository.findByRoleChangeToken(token);
         
         if (user == null) {
+            System.out.println("DEBUG: Usuario no encontrado para el token: " + token);
+            // Intento de debug adicional: imprimir todos los tokens (solo para dev)
+            userRepository.findAll().forEach(u -> 
+                System.out.println("DEBUG: User " + u.getEmail() + " Token: " + u.getRoleChangeToken())
+            );
             throw new Exception("Token de solicitud inválido o no encontrado.");
         }
 
+        System.out.println("DEBUG: Usuario encontrado: " + user.getEmail() + ", Role solicitado: " + user.getRequestedRole());
+
         if (user.getRequestedRole() == null) {
+            System.out.println("DEBUG: No hay solicitado rol.");
              throw new Exception("No hay rol pendiente de aprobación.");
         }
 
@@ -161,7 +165,13 @@ public class UserService {
         
         userRepository.save(user);
         
-        emailService.sendRoleStatusEmail(user.getEmail(), "APROBADO", user.getRole());
+        System.out.println("DEBUG: Rol actualizado correctamente a " + user.getRole());
+        
+        try {
+            emailService.sendRoleStatusEmail(user.getEmail(), "APROBADO", user.getRole());
+        } catch (Exception e) {
+             System.out.println("DEBUG: Error enviando email de confirmación: " + e.getMessage());
+        }
     }
 
     @Transactional
