@@ -2,6 +2,8 @@ package com.wallet.secure.controller;
 
 import com.wallet.secure.entity.User;
 import com.wallet.secure.repository.UserRepository;
+import com.wallet.secure.service.EmailService;
+import com.wallet.secure.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,9 +14,13 @@ import java.util.List;
 public class UserRestController {
 
     private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final UserService userService;
 
-    public UserRestController(UserRepository userRepository) {
+    public UserRestController(UserRepository userRepository, EmailService emailService, UserService userService) {
         this.userRepository = userRepository;
+        this.emailService = emailService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -55,5 +61,44 @@ public class UserRestController {
                     return ResponseEntity.ok().build();
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/role-request")
+    public ResponseEntity<?> requestRoleChange(@PathVariable Long id, @RequestParam String newRole) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setRequestedRole(newRole);
+                    user.setRoleChangeToken(java.util.UUID.randomUUID().toString());
+                    userRepository.save(user);
+
+                    try {
+                        emailService.sendAdminRoleRequest(user.getEmail(), newRole, user.getRoleChangeToken());
+                    } catch (Exception e) {
+                        System.err.println("Error enviando correo al admin: " + e.getMessage());
+                    }
+
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/approve-role")
+    public ResponseEntity<?> approveRoleChange(@RequestParam String token) {
+        try {
+            userService.approveRoleChange(token);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/reject-role")
+    public ResponseEntity<?> rejectRoleChange(@RequestParam String token) {
+        try {
+            userService.rejectRoleChange(token);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

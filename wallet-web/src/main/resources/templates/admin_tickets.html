@@ -38,17 +38,17 @@
                         <td th:text="${ticket.subject}" class="fw-bold">Subject</td>
                         <td th:text="${ticket.message}" class="text-muted small">Message...</td>
                         <td>
-                            <span th:if="${ticket.status.name() == 'OPEN'}" class="badge bg-success">ABIERTO</span>
-                            <span th:if="${ticket.status.name() == 'CLOSED'}" class="badge bg-secondary">CERRADO</span>
+                            <span th:if="${ticket.status == T(com.wallet.secure.dto.Ticket.Status).OPEN}" class="badge bg-success">ABIERTO</span>
+                            <span th:if="${ticket.status == T(com.wallet.secure.dto.Ticket.Status).CLOSED}" class="badge bg-secondary">CERRADO</span>
                         </td>
                         <td>
-                            <a th:if="${ticket.status == T(com.wallet.secure.entity.Ticket.Status).OPEN}"
+                            <a th:if="${ticket.status == T(com.wallet.secure.dto.Ticket.Status).OPEN}"
                                th:href="@{/support/admin/tickets/close/{id}(id=${ticket.id})}" 
                                class="btn btn-sm btn-outline-success"
                                onclick="return confirm('¿Marcar este ticket como resuelto?');">
                                 <i class="bi bi-check-lg"></i> Marcar Resuelto
                             </a>
-                            <span th:unless="${ticket.status == T(com.wallet.secure.entity.Ticket.Status).OPEN}" class="text-muted small">
+                            <span th:unless="${ticket.status == T(com.wallet.secure.dto.Ticket.Status).OPEN}" class="text-muted small">
                                 <i class="bi bi-check-all"></i> Resuelto
                             </span>
                         </td>

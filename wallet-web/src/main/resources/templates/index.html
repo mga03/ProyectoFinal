@@ -26,7 +26,7 @@
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="/profile">Mi Perfil</a></li>
                     <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" href="/admin/users">Panel Admin</a></li>
-                    <li sec:authorize="hasAnyRole('ADMIN', 'MANAGER', 'WORKER')"><a class="dropdown-item" href="/support/admin/tickets">Gestionar Soporte</a></li>
+                    <li sec:authorize="hasAnyRole('ADMIN', 'MANAGER', 'WORKER')"><a class="dropdown-item" href="/support/admin">Gestionar Soporte</a></li>
                     <li><a class="dropdown-item" href="/support">Centro de Soporte</a></li>
                 </ul>
             </div>

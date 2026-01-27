@@ -68,10 +68,15 @@ public class UserController {
 
     @PostMapping("/profile/request-role")
     public String requestRoleChange(@RequestParam String desiredRole, 
-                                    @AuthenticationPrincipal UserDetails currentUser,
+                                    @AuthenticationPrincipal UserDetails userDetails,
                                     RedirectAttributes redirectAttributes) {
-        // Feature temporarily disabled in migration
-        redirectAttributes.addFlashAttribute("msg", "Funcionalidad en migración.");
+        if (userDetails != null) {
+            User user = apiClientService.getUserByEmail(userDetails.getUsername());
+            if (user != null) {
+                apiClientService.requestRoleChange(user.getId(), desiredRole);
+                redirectAttributes.addFlashAttribute("msg", "Solicitud enviada exitosamente.");
+            }
+        }
         return "redirect:/profile";
     }
 

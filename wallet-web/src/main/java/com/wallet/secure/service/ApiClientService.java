@@ -1,6 +1,7 @@
 package com.wallet.secure.service;
 
 import com.wallet.secure.dto.Insurance;
+import com.wallet.secure.dto.Ticket;
 import com.wallet.secure.dto.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -224,6 +225,81 @@ public class ApiClientService {
             restTemplate.postForEntity(API_URL + "/auth/reset-password", Map.of("token", token, "password", newPassword), Void.class);
         } catch (Exception e) {
              logger.error("Error reseteando contraseña: " + e.getMessage());
+        }
+    }
+    public void requestRoleChange(Long userId, String newRole) {
+        try {
+            restTemplate.postForEntity(API_URL + "/users/" + userId + "/role-request?newRole=" + newRole, new HttpEntity<>(getHeaders()), Void.class);
+        } catch (Exception e) {
+            logger.error("Error solicitando cambio de rol: " + e.getMessage());
+        }
+    }
+
+    public boolean approveRoleChange(String token) {
+        try {
+            restTemplate.postForEntity(API_URL + "/users/approve-role?token=" + token, new HttpEntity<>(getHeaders()), Void.class);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error aprobando rol: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean rejectRoleChange(String token) {
+        try {
+            restTemplate.postForEntity(API_URL + "/users/reject-role?token=" + token, new HttpEntity<>(getHeaders()), Void.class);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error rechazando rol: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // --- Soporte / Tickets ---
+
+    public List<Ticket> getAllTickets() {
+        try {
+            ResponseEntity<List<Ticket>> response = restTemplate.exchange(
+                API_URL + "/tickets",
+                HttpMethod.GET,
+                new HttpEntity<>(getHeaders()),
+                new ParameterizedTypeReference<List<Ticket>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            logger.error("Error obteniendo todos los tickets: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    public List<Ticket> getTicketsByUser(Long userId) {
+        try {
+            ResponseEntity<List<Ticket>> response = restTemplate.exchange(
+                API_URL + "/tickets/user/" + userId,
+                HttpMethod.GET,
+                new HttpEntity<>(getHeaders()),
+                new ParameterizedTypeReference<List<Ticket>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            logger.error("Error obteniendo tickets del usuario: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    public void createTicket(Long userId, Ticket ticket) {
+        try {
+            restTemplate.postForEntity(API_URL + "/tickets/user/" + userId, new HttpEntity<>(ticket, getHeaders()), Ticket.class);
+        } catch (Exception e) {
+            logger.error("Error creando ticket: " + e.getMessage());
+        }
+    }
+
+    public void closeTicket(Long ticketId) {
+        try {
+            restTemplate.exchange(API_URL + "/tickets/" + ticketId + "/close", HttpMethod.PUT, new HttpEntity<>(getHeaders()), Void.class);
+        } catch (Exception e) {
+            logger.error("Error cerrando ticket: " + e.getMessage());
         }
     }
 }
