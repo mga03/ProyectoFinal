@@ -13,6 +13,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
+/**
+ * Controlador para la gestión administrativa de usuarios.
+ * Permite listar y eliminar usuarios, con protecciones para evitar borrar al administrador principal o al propio usuario.
+ */
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -23,6 +27,13 @@ public class AdminController {
         this.apiClientService = apiClientService;
     }
 
+    /**
+     * Muestra la vista de administración de usuarios.
+     * Lista todos los usuarios registrados en el sistema.
+     *
+     * @param model Modelo para pasar datos a la vista.
+     * @return El nombre de la plantilla HTML (admin_users).
+     */
     @GetMapping("/users")
     public String adminUsers(Model model) {
         List<User> users = apiClientService.getAllUsers();
@@ -30,22 +41,26 @@ public class AdminController {
         return "admin_users";
     }
 
+    /**
+     * Elimina un usuario del sistema por su ID.
+     * <p>
+     * Realiza validaciones de seguridad para impedir la eliminación del Super Admin
+     * o del usuario que está actualmente autenticado.
+     * </p>
+     *
+     * @param id ID del usuario a eliminar.
+     * @param currentUser Detalles del usuario autenticado actualmente.
+     * @param redirectAttributes Atributos para mensajes flash (éxito/error).
+     * @return Redirección a la lista de usuarios.
+     */
     @GetMapping("/users/delete/{id}")
     public String deleteUser(@PathVariable Long id, 
                              @AuthenticationPrincipal UserDetails currentUser,
                              RedirectAttributes redirectAttributes) {
         
-        // 1. Obtener usuario a eliminar para verificar
-        // (En un caso real, podrías necesitar un endpoint getById en ApiClientService, 
-        //  o buscarlo en la lista si la tienes cacheada, pero mejor volver a pedirlo)
-        // Como ApiClientService tiene un getAllUsers, podríamos filtrar, o añadir getUserById.
-        // Asumiremos que getUserById es viable o iteramos sobre getAllUsers si la lista es pequeña.
-        
-        // Mejor opción: delegar la lógica de seguridad al endpoint de borrado o comprobar aquí si es posible.
-        // Dado que no tengo getUserById público fácil en ApiClientService (sí tengo getInsuranceById),
-        // voy a asumir que puedo llamar a getAllUsers y filtrar.
-        
         try {
+            // 1. Obtener usuario a eliminar para verificar
+            // Se asume que obtenemos todos y filtramos, ya que no hay un endpoint público getById simple.
             List<User> users = apiClientService.getAllUsers();
             User userToDelete = users.stream()
                 .filter(u -> u.getId().equals(id))
@@ -57,13 +72,13 @@ public class AdminController {
                 return "redirect:/admin/users";
             }
 
-            // 2. Comprobar si es Super Admin
+            // 2. Comprobar si es Super Admin (Protección crítica)
             if ("guarinosmanuel07@gmail.com".equals(userToDelete.getEmail())) {
                 redirectAttributes.addFlashAttribute("error", "No se puede eliminar al Super Admin.");
                 return "redirect:/admin/users";
             }
 
-            // 3. Comprobar si es el Usuario Actual
+            // 3. Comprobar si es el Usuario Actual (Autoprotección)
             if (currentUser != null && currentUser.getUsername().equals(userToDelete.getEmail())) {
                 redirectAttributes.addFlashAttribute("error", "No puedes eliminar tu propia cuenta mientras estás logueado.");
                 return "redirect:/admin/users";

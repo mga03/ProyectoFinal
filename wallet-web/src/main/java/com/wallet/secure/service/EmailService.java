@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
 
+/**
+ * Servicio encargado del envío de correos electrónicos desde el cliente web.
+ * Se utiliza para notificaciones de registro, recuperación de contraseña y gestión de roles.
+ */
 @Service
 public class EmailService {
 
@@ -18,6 +22,14 @@ public class EmailService {
     // --- CONFIGURACIÓN DE TU DOMINIO NGROK ---
     private final String BASE_URL = "https://nontraditionalistic-unactinic-jung.ngrok-free.dev";
 
+    /**
+     * Envía un correo de verificación de cuenta al usuario.
+     *
+     * @param recipientEmail Correo del destinatario.
+     * @param code Código de verificación.
+     * @throws MessagingException Error general de mensajería.
+     * @throws UnsupportedEncodingException Error de codificación de caracteres.
+     */
     public void sendVerificationEmail(String recipientEmail, String code) 
             throws MessagingException, UnsupportedEncodingException {
         
@@ -40,9 +52,17 @@ public class EmailService {
         
         helper.setText(content, true);
         mailSender.send(message);
-        System.out.println(" Correo enviado a: " + recipientEmail);
+        System.out.println("INFO: Correo enviado a: " + recipientEmail);
     }
     
+    /**
+     * Envía un correo para restablecer la contraseña.
+     *
+     * @param recipientEmail Correo del destinatario.
+     * @param token Token de recuperación.
+     * @throws MessagingException Error general de mensajería.
+     * @throws UnsupportedEncodingException Error de codificación.
+     */
     public void sendPasswordResetEmail(String recipientEmail, String token)
             throws MessagingException, UnsupportedEncodingException {
             
@@ -66,12 +86,19 @@ public class EmailService {
                 
         helper.setText(content, true);
         mailSender.send(message);
-        System.out.println("Correo de recuperación enviado a: " + recipientEmail);
+        System.out.println("INFO: Correo de recuperación enviado a: " + recipientEmail);
     }
 
-    // 1. Correo PARA EL ADMINISTRADOR
+    /**
+     * Envía una solicitud de cambio de rol al administrador.
+     *
+     * @param userEmail Correo del usuario que solicita.
+     * @param desiredRole Rol deseado.
+     * @param token Token de solicitud.
+     * @throws MessagingException Error enviando el correo.
+     */
     public void sendAdminRoleRequest(String userEmail, String desiredRole, String token) throws MessagingException {
-        System.out.println("📧 Intentando enviar solicitud de admin. De: " + userEmail);
+        System.out.println("INFO: Intentando enviar solicitud de admin. De: " + userEmail);
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -94,7 +121,14 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    // 2. Correo PARA EL USUARIO
+    /**
+     * Notifica al usuario la respuesta a su solicitud de rol.
+     *
+     * @param userEmail Correo del usuario.
+     * @param status Estado de la solicitud.
+     * @param roleName Nombre del rol.
+     * @throws MessagingException Error enviando el correo.
+     */
     public void sendRoleStatusEmail(String userEmail, String status, String roleName) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

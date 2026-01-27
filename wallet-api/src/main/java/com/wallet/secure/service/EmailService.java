@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.io.UnsupportedEncodingException;
 
+/**
+ * Servicio encargado del envío de correos electrónicos.
+ * Maneja notificaciones de registro, recuperación de contraseña y gestión de roles.
+ */
 @Service
 public class EmailService {
 
@@ -21,6 +25,14 @@ public class EmailService {
     @Value("${app.frontend.url:http://localhost:8888}")
     private String FRONTEND_URL;
 
+    /**
+     * Envía un correo de verificación de cuenta al usuario recién registrado.
+     *
+     * @param recipientEmail Dirección de correo del destinatario.
+     * @param code Código de verificación único.
+     * @throws MessagingException Error en la creación del mensaje.
+     * @throws UnsupportedEncodingException Error con la codificación de caracteres.
+     */
     public void sendVerificationEmail(String recipientEmail, String code) 
             throws MessagingException, UnsupportedEncodingException {
         
@@ -43,9 +55,17 @@ public class EmailService {
         
         helper.setText(content, true);
         mailSender.send(message);
-        System.out.println(" Correo enviado a: " + recipientEmail);
+        System.out.println("INFO: Correo enviado a: " + recipientEmail);
     }
     
+    /**
+     * Envía un correo con un enlace para restablecer la contraseña.
+     *
+     * @param recipientEmail Dirección de correo del destinatario.
+     * @param token Token único de recuperación.
+     * @throws MessagingException Error en la creación del mensaje.
+     * @throws UnsupportedEncodingException Error con la codificación de caracteres.
+     */
     public void sendPasswordResetEmail(String recipientEmail, String token)
             throws MessagingException, UnsupportedEncodingException {
             
@@ -69,12 +89,19 @@ public class EmailService {
                 
         helper.setText(content, true);
         mailSender.send(message);
-        System.out.println("Correo de recuperación enviado a: " + recipientEmail);
+        System.out.println("INFO: Correo de recuperación enviado a: " + recipientEmail);
     }
 
-    // 1. Correo PARA EL ADMINISTRADOR
+    /**
+     * Envía una solicitud de cambio de rol al administrador.
+     *
+     * @param userEmail Correo del usuario que solicita el cambio.
+     * @param desiredRole Rol solicitado.
+     * @param token Token de aprobación.
+     * @throws MessagingException Error en el envío del correo.
+     */
     public void sendAdminRoleRequest(String userEmail, String desiredRole, String token) throws MessagingException {
-        System.out.println("📧 Intentando enviar solicitud de admin. De: " + userEmail);
+        System.out.println("INFO: Intentando enviar solicitud de admin. De: " + userEmail);
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -82,9 +109,8 @@ public class EmailService {
         helper.setTo("guarinosmanuel07@gmail.com"); 
         helper.setSubject("Solicitud de Cambio de Rol: " + userEmail);
 
-        // Role approval is internal logic, usually Admin logs in to approve. 
-        // If external links needed, they should point to Frontend which calls API.
-        // Assuming Admin uses Frontend:
+        // La aprobación de roles es lógica interna, usualmente el Admin se loguea para aprobar.
+        // Si se necesitan enlaces externos, deben apuntar al Frontend que llama a la API.
         String approveLink = FRONTEND_URL + "/role-approval/approve?token=" + token;
         String rejectLink = FRONTEND_URL + "/role-approval/reject?token=" + token;
         
@@ -100,7 +126,14 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    // 2. Correo PARA EL USUARIO
+    /**
+     * Notifica al usuario sobre el estado de su solicitud de cambio de rol.
+     *
+     * @param userEmail Correo del usuario.
+     * @param status Estado de la solicitud (APROBADO/DENEGADO).
+     * @param roleName Nombre del rol asignado.
+     * @throws MessagingException Error en el envío del correo.
+     */
     public void sendRoleStatusEmail(String userEmail, String status, String roleName) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

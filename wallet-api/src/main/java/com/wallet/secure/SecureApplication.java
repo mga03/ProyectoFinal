@@ -10,16 +10,33 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Clase principal de arranque para la aplicación backend (wallet-api).
+ * Configura el arranque de Spring Boot e inicializa datos críticos.
+ */
 @SpringBootApplication
 public class SecureApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(SecureApplication.class);
 
+    /**
+     * Método principal que inicia la aplicación Spring Boot.
+     *
+     * @param args Argumentos de línea de comandos.
+     */
     public static void main(String[] args) {
         SpringApplication.run(SecureApplication.class, args);
         logger.info("Aplicacion Wallet Secure iniciada correctamente.");
     }
 
+    /**
+     * Inicializa los datos básicos de la aplicación al arrancar.
+     * Garantiza que exista un Super Administrador y un usuario demo.
+     *
+     * @param userRepository Repositorio de usuarios.
+     * @param passwordEncoder Codificador de contraseñas.
+     * @return CommandLineRunner con la lógica de inicialización.
+     */
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
@@ -35,7 +52,7 @@ public class SecureApplication {
                 superAdmin.setRole("ROLE_ADMIN");
                 superAdmin.setEnabled(true);
                 userRepository.save(superAdmin);
-                logger.info("✅ SUPER ADMIN creado: guarinosmanuel07@gmail.com / 1234");
+                logger.info("SUPER ADMIN creado: guarinosmanuel07@gmail.com / 1234");
             } else {
                 // Si YA existe, solo nos aseguramos de que siga siendo ADMIN, pero NO tocamos la contraseña
                 boolean changed = false;
@@ -50,11 +67,9 @@ public class SecureApplication {
                 
                 if (changed) {
                     userRepository.save(superAdmin);
-                    logger.info("ℹ️ Permisos de Super Admin restaurados (Contraseña mantenida).");
+                    logger.info("INFO: Permisos de Super Admin restaurados (Contraseña mantenida).");
                 }
             }
-
-
 
             // 5. Demo User (Check by email to avoid duplicates)
             if (userRepository.findByEmail("demo@wallet.com") == null) {

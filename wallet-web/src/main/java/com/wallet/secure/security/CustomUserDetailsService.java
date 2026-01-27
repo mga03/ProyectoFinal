@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
+/**
+ * Servicio de seguridad personalizado para la aplicación web.
+ * Consume la API para validar la autenticación del usuario.
+ */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -19,15 +23,22 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.apiClientService = apiClientService;
     }
 
+    /**
+     * Carga el usuario llamando a la API con su correo electrónico.
+     *
+     * @param email Correo electrónico del usuario.
+     * @return UserDetails con la información obtenida de la API.
+     * @throws UsernameNotFoundException Si la API no retorna el usuario.
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = apiClientService.getUserByEmail(email); // Requires API to expose this
         if (user == null) {
-            System.err.println("❌ LOGIN ERROR: Usuario no encontrado via API: " + email);
+            System.err.println("LOGIN ERROR: Usuario no encontrado via API: " + email);
             throw new UsernameNotFoundException("User not found via API: " + email);
         }
 
-        System.out.println("🔐 LOGIN ATTEMPT: " + email + " | Role: " + user.getRole());
+        System.out.println("INFO: Intento de inicio de sesión: " + email + " | Rol: " + user.getRole());
         
         String roleName = user.getRole();
         if (roleName != null && !roleName.startsWith("ROLE_")) {
