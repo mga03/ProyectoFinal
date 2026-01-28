@@ -130,7 +130,7 @@
                     <a sec:authorize="hasAnyRole('ADMIN', 'MANAGER', 'WORKER')" th:href="@{/insurance/{id}/details(id=${insurance.id})}" class="btn btn-outline-warning w-100 mb-2 fw-bold"><i class="bi bi-exclamation-triangle"></i> Reportar Siniestro</a>
                     <div class="d-flex justify-content-between" sec:authorize="hasAnyRole('ADMIN', 'MANAGER', 'WORKER')">
                         <a th:href="@{/edit/{id}(id=${insurance.id})}" class="btn btn-sm btn-outline-primary w-50 me-1"><i class="bi bi-pencil"></i> Editar</a>
-                        <a th:href="@{/delete/{id}(id=${insurance.id})}" class="btn btn-sm btn-outline-danger w-50 ms-1" onclick="return confirm('¿Seguro?');"><i class="bi bi-trash"></i></a>
+                        <a th:href="@{/delete/{id}(id=${insurance.id})}" class="btn btn-sm btn-outline-danger w-50 ms-1 delete-confirm-btn"><i class="bi bi-trash"></i></a>
                     </div>
                 </div>
             </div>
@@ -183,5 +183,42 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Seleccionamos todos los botones de borrar
+        const deleteButtons = document.querySelectorAll('.delete-confirm-btn');
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault(); // Detenemos la navegación automática
+                const deleteUrl = this.getAttribute('href'); // Guardamos la ruta de borrado
+
+                Swal.fire({
+                    title: 'ZONA DE PELIGRO',
+                    text: "Esta acción es irreversible. Para confirmar, escribe la palabra: BORRAR",
+                    input: 'text',
+                    inputPlaceholder: 'Escribe BORRAR aquí',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: (inputValue) => {
+                        if (inputValue !== 'BORRAR') {
+                            Swal.showValidationMessage('Debes escribir la palabra exacta: BORRAR');
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Si todo es correcto, redirigimos manualmente
+                        window.location.href = deleteUrl;
+                    }
+                });
+            });
+        });
+    });
+</script>
 </body>
 </html>

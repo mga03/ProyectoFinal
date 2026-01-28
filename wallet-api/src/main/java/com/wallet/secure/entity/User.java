@@ -105,4 +105,14 @@ public class User {
         insurances.add(insurance);
         insurance.setUser(this);
     }
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
 }

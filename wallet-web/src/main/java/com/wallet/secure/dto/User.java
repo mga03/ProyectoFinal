@@ -59,4 +59,15 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() { return enabled; }
+    
+    private String avatarUrl;
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+    
 }

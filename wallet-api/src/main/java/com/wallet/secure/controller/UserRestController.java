@@ -55,6 +55,9 @@ public class UserRestController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        if (id == 1L) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "No se puede eliminar al Administrador Principal."));
+        }
         return userRepository.findById(id)
                 .map(user -> {
                     userRepository.delete(user);
