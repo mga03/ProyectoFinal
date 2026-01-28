@@ -13,6 +13,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @jakarta.persistence.Column(length = 50)
+    @jakarta.validation.constraints.Size(max = 50, message = "El nombre no puede superar los 50 caracteres")
     private String name;
     private String email;
     private String password;
