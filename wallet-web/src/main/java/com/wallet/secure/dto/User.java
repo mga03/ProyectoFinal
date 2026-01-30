@@ -7,7 +7,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
-// IMPLEMENTAMOS UserDetails PARA QUE SPRING LO ENTIENDA
+/**
+ * DTO (Data Transfer Object) y principal de seguridad para el usuario en el frontend.
+ * <p>
+ * Representa la información del usuario autenticado y se adapta a la interfaz {@link UserDetails}
+ * de Spring Security para su uso en la sesión y control de acceso.
+ * </p>
+ */
 public class User implements UserDetails {
     
     private Long id;

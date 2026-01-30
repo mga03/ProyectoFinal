@@ -17,6 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Controlador principal para la gestión de seguros en el frontend.
+ * Maneja las vistas de dashboard (index), creación, edición, borrado y detalles de pólizas,
+ * así como la exportación a PDF.
+ */
 @Controller
 public class InsuranceController {
 
@@ -55,12 +60,25 @@ public class InsuranceController {
         return "index";
     }
 
+    /**
+     * Muestra el formulario para crear un nuevo seguro.
+     *
+     * @param model Modelo para la vista.
+     * @return Vista del formulario (form.html).
+     */
     @GetMapping("/new")
     public String newInsurance(Model model) {
         model.addAttribute("insurance", new Insurance());
         return "form";
     }
 
+    /**
+     * Muestra el formulario para editar un seguro existente.
+     *
+     * @param id ID del seguro.
+     * @param model Modelo para la vista.
+     * @return Vista del formulario o redirección a inicio.
+     */
     @GetMapping("/edit/{id}")
     public String editInsurance(@PathVariable Long id, Model model) {
         Insurance insurance = apiClientService.getInsuranceById(id);
@@ -71,6 +89,14 @@ public class InsuranceController {
         return "redirect:/";
     }
 
+    /**
+     * Procesa el guardado de un seguro (creación o actualización).
+     *
+     * @param insurance Objeto Insurance con los datos del formulario.
+     * @param result Resultado de la validación.
+     * @param imageFile Archivo de imagen opcional.
+     * @return Redirección a inicio o vuelta al formulario si hay errores.
+     */
     @PostMapping("/save")
     public String saveInsurance(@jakarta.validation.Valid @ModelAttribute Insurance insurance,
                                 BindingResult result,
@@ -96,12 +122,25 @@ public class InsuranceController {
         return "redirect:/";
     }
 
+    /**
+     * Elimina un seguro.
+     *
+     * @param id ID del seguro.
+     * @return Redirección a inicio.
+     */
     @GetMapping("/delete/{id}")
     public String deleteInsurance(@PathVariable Long id) {
         apiClientService.deleteInsurance(id);
         return "redirect:/";
     }
 
+    /**
+     * Muestra los detalles completos de un seguro, incluyendo beneficiarios y reclamaciones.
+     *
+     * @param id ID del seguro.
+     * @param model Modelo para la vista.
+     * @return Vista de detalles (insurance-details.html).
+     */
     @GetMapping("/insurance/{id}/details")
     public String insuranceDetails(@PathVariable Long id, Model model) {
         Insurance insurance = apiClientService.getInsuranceById(id);
@@ -114,12 +153,26 @@ public class InsuranceController {
         return "redirect:/";
     }
 
+    /**
+     * Agrega una nueva reclamación a un seguro.
+     *
+     * @param id ID del seguro.
+     * @param claim Objeto Claim.
+     * @return Redirección a la vista de detalles.
+     */
     @PostMapping("/insurance/{id}/claims/save")
     public String saveClaim(@PathVariable Long id, @ModelAttribute Claim claim) {
          apiClientService.saveClaim(claim, id);
          return "redirect:/insurance/" + id + "/details?success=claim_saved";
     }
 
+    /**
+     * Agrega un nuevo beneficiario a un seguro.
+     *
+     * @param id ID del seguro.
+     * @param beneficiary Objeto Beneficiary.
+     * @return Redirección a la vista de detalles.
+     */
     @PostMapping("/insurance/{id}/beneficiaries/save")
     public String saveBeneficiary(@PathVariable Long id, @ModelAttribute Beneficiary beneficiary) {
         apiClientService.saveBeneficiary(beneficiary, id);
@@ -127,6 +180,13 @@ public class InsuranceController {
     }
 
     // --- AQUÍ ESTÁ LA MAGIA DEL PDF ---
+    /**
+     * Exporta el listado de seguros a un archivo PDF descargable.
+     *
+     * @param response Respuesta HTTP para escribir el archivo.
+     * @param userDetails Usuario autenticado.
+     * @throws IOException Si ocurre un error de E/S.
+     */
     @GetMapping("/insurances/export/pdf")
     public void exportToPDF(HttpServletResponse response, @AuthenticationPrincipal UserDetails userDetails) throws IOException {
         response.setContentType("application/pdf");

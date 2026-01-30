@@ -4,10 +4,19 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * Entidad que representa un pago realizado asociado a una póliza de seguro.
+ * <p>
+ * Almacena la cantidad, la fecha de pago y el estado de la transacción.
+ * </p>
+ */
 @Entity
 @Table(name = "payments")
 public class Payment {
 
+    /**
+     * Identificador único del pago.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -12,6 +12,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 
+/**
+ * Proveedor de autenticación personalizado que delega la verificación al backend (API).
+ * Realiza una llamada al servicio {@link ApiClientService} para validar las credenciales.
+ */
 @Component
 public class ApiAuthenticationProvider implements AuthenticationProvider {
 
@@ -21,6 +25,13 @@ public class ApiAuthenticationProvider implements AuthenticationProvider {
         this.apiClientService = apiClientService;
     }
 
+    /**
+     * Realiza la autenticación del usuario llamando a la API.
+     *
+     * @param authentication Objeto de autenticación con el correo y contraseña.
+     * @return Objeto Authentication completamente poblado (incluyendo roles) si es exitoso.
+     * @throws AuthenticationException Si las credenciales son inválidas o la cuenta no está verificada.
+     */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String email = authentication.getName();

@@ -11,6 +11,12 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Servicio encargado de generar documentos PDF en la aplicación web.
+ * <p>
+ * Crea reportes descargables con el resumen de seguros para el usuario final.
+ * </p>
+ */
 @Service
 public class PdfService {
 

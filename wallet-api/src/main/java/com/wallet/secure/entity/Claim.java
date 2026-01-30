@@ -4,10 +4,19 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * Entidad que representa una reclamación o siniestro asociado a un seguro.
+ * <p>
+ * Registra los detalles del incidente, su estado de resolución y el coste estimado.
+ * </p>
+ */
 @Entity
 @Table(name = "claims")
 public class Claim {
 
+    /**
+     * Identificador único de la reclamación.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

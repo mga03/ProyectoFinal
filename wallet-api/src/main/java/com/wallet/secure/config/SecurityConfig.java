@@ -21,6 +21,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Clase de configuración principal para la seguridad de Spring.
+ * <p>
+ * Define la cadena de filtros de seguridad, políticas CORS, gestión de sesiones sin estado (Stateless)
+ * y la configuración del codificador de contraseñas.
+ * </p>
+ */
 @Configuration
 @EnableWebSecurity
 @org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -32,6 +39,20 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Configura la cadena de filtros de seguridad HTTP.
+     * <p>
+     * - Deshabilita CSRF (API REST).<br>
+     * - Configura CORS.<br>
+     * - Establece sesión STATELESS.<br>
+     * - Define reglas de autorización de endpoints.<br>
+     * - Añade el filtro personalizado (TrustedHeaderFilter) para autenticación entre microservicios.
+     * </p>
+     *
+     * @param http Objeto HttpSecurity para configurar la seguridad.
+     * @return La cadena de filtros configurada.
+     * @throws Exception Si hay error en la configuración.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -47,6 +68,12 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Configura la política de CORS (Cross-Origin Resource Sharing).
+     * <p>Permite peticiones desde cualquier origen (para desarrollo) y métodos estándar.</p>
+     *
+     * @return Fuente de configuración de CORS.
+     */
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
@@ -63,12 +90,20 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * Define el bean para la encriptación de contraseñas usando BCrypt.
+     *
+     * @return Instancia de BCryptPasswordEncoder.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Filtro para autenticar usando el header X-Auth-User
+    /**
+     * Filtro personalizado para confiar en el header de autenticación entre Gateway/Cliente y API.
+     * <p>Permite la autenticación basada en el header 'X-Auth-User' sin necesidad de tokens JWT complejos en esta capa.</p>
+     */
     public static class TrustedHeaderFilter extends OncePerRequestFilter {
         private final CustomUserDetailsService userDetailsService;
 

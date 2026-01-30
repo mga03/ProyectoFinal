@@ -11,9 +11,23 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Servicio encargado de generar documentos PDF.
+ * <p>
+ * Crea un reporte descargable con un resumen de los seguros del usuario,
+ * incluyendo títulos, compañías, fechas de vencimiento y primas.
+ * </p>
+ */
 @Service
 public class PdfService {
 
+    /**
+     * Genera y escribe un documento PDF con la lista de seguros en la respuesta HTTP.
+     *
+     * @param response La respuesta HTTP donde se escribirá el PDF.
+     * @param insurances Lista de seguros a incluir en el reporte.
+     * @throws IOException Si ocurre un error de escritura.
+     */
     public void export(jakarta.servlet.http.HttpServletResponse response, List<Insurance> insurances) throws IOException {
         Document document = new Document(PageSize.A4);
         PdfWriter.getInstance(document, response.getOutputStream());
@@ -57,6 +71,11 @@ public class PdfService {
         document.close();
     }
 
+    /**
+     * Escribe la cabecera de la tabla del PDF con los títulos de las columnas.
+     *
+     * @param table La tabla PDF donde se añadirán las celdas de cabecera.
+     */
     private void writeTableHeader(PdfPTable table) {
         PdfPCell cell = new PdfPCell();
         cell.setBackgroundColor(Color.BLUE);
@@ -78,6 +97,12 @@ public class PdfService {
         table.addCell(cell);
     }
 
+    /**
+     * Escribe los datos de cada seguro en las filas de la tabla.
+     *
+     * @param table La tabla PDF.
+     * @param insurances La lista de seguros a procesar.
+     */
     private void writeTableData(PdfPTable table, List<Insurance> insurances) {
         for (Insurance insurance : insurances) {
             table.addCell(insurance.getTitle());

@@ -12,6 +12,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controlador REST para la gestión de pólizas de seguro.
+ * <p>
+ * Permite a los usuarios autenticados crear, leer, actualizar y eliminar sus propios seguros.
+ * También gestiona la adición de beneficiarios a las pólizas.
+ * </p>
+ */
 @RestController
 @RequestMapping("/api/insurances")
 @CrossOrigin(origins = "*") // In production, restrict to localhost:8080
@@ -29,12 +36,26 @@ public class InsuranceRestController {
         this.beneficiaryRepository = beneficiaryRepository;
     }
 
+    /**
+     * Obtiene todos los seguros pertenecientes al usuario autenticado.
+     *
+     * @param userDetails Detalles del usuario autenticado actual.
+     * @return Lista de seguros del usuario.
+     */
     @GetMapping
     public List<Insurance> getAllInsurances(@AuthenticationPrincipal UserDetails userDetails) {
         User user = userRepository.findByEmail(userDetails.getUsername());
         return insuranceRepository.findByUser(user, org.springframework.data.domain.Pageable.unpaged()).getContent();
     }
 
+    /**
+     * Obtiene una póliza de seguro específica por su ID.
+     * <p>Valida que el seguro pertenezca al usuario solicitante.</p>
+     *
+     * @param id Identificador del seguro.
+     * @param userDetails Detalles del usuario autenticado.
+     * @return ResponseEntity con el seguro si existe y pertenece al usuario, o 404 Not Found.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Insurance> getInsurance(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
          Insurance insurance = insuranceRepository.findById(id).orElse(null);
@@ -44,6 +65,14 @@ public class InsuranceRestController {
          return ResponseEntity.notFound().build();
     }
 
+    /**
+     * Crea una nueva póliza de seguro para el usuario autenticado.
+     * <p>También genera automáticamente un pago inicial pendiente si hay un monto de prima.</p>
+     *
+     * @param insurance Objeto Insurance con los datos de la póliza.
+     * @param userDetails Detalles del usuario autenticado.
+     * @return La póliza de seguro creada.
+     */
     @PostMapping
     public Insurance createInsurance(@RequestBody Insurance insurance, @AuthenticationPrincipal UserDetails userDetails) {
         User user = userRepository.findByEmail(userDetails.getUsername());
@@ -64,6 +93,14 @@ public class InsuranceRestController {
         return saved;
     }
 
+    /**
+     * Actualiza una póliza de seguro existente.
+     *
+     * @param id Identificador del seguro a actualizar.
+     * @param insuranceDetails Nuevos detalles del seguro.
+     * @param userDetails Detalles del usuario autenticado.
+     * @return ResponseEntity con el seguro actualizado o 404 si no se encuentra/autoriza.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<Insurance> updateInsurance(@PathVariable Long id, @RequestBody Insurance insuranceDetails, @AuthenticationPrincipal UserDetails userDetails) {
         Insurance insurance = insuranceRepository.findById(id).orElse(null);
@@ -84,6 +121,13 @@ public class InsuranceRestController {
         return ResponseEntity.ok(insuranceRepository.save(insurance));
     }
 
+    /**
+     * Elimina una póliza de seguro.
+     *
+     * @param id Identificador del seguro a eliminar.
+     * @param userDetails Detalles del usuario autenticado.
+     * @return ResponseEntity con el estado de la operación (OK o Not Found).
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInsurance(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         Insurance insurance = insuranceRepository.findById(id).orElse(null);
@@ -94,6 +138,14 @@ public class InsuranceRestController {
         return ResponseEntity.notFound().build();
     }
 
+    /**
+     * Añade un beneficiario a una póliza de seguro existente.
+     *
+     * @param id Identificador del seguro.
+     * @param beneficiary Objeto Beneficiary con los datos del beneficiario.
+     * @param userDetails Detalles del usuario autenticado.
+     * @return ResponseEntity con el beneficiario guardado o 404 si el seguro no se encuentra.
+     */
     @PostMapping("/{id}/beneficiaries")
     public ResponseEntity<com.wallet.secure.entity.Beneficiary> addBeneficiary(@PathVariable Long id, @RequestBody com.wallet.secure.entity.Beneficiary beneficiary, @AuthenticationPrincipal UserDetails userDetails) {
         Insurance insurance = insuranceRepository.findById(id).orElse(null);

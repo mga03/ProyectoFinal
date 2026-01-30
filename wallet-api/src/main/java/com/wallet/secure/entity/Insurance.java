@@ -3,10 +3,20 @@ package com.wallet.secure.entity;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * Entidad que representa una póliza de seguro.
+ * <p>
+ * Contiene los detalles de la cobertura, la compañía aseguradora,
+ * el coste de la prima, la vigencia y las relaciones con reclamaciones y beneficiarios.
+ * </p>
+ */
 @Entity
 @Table(name = "insurances")
 public class Insurance {
 
+    /**
+     * Identificador único del seguro.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

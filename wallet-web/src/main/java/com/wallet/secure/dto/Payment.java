@@ -3,6 +3,10 @@ package com.wallet.secure.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDate;
 
+/**
+ * DTO que representa un pago de una prima de seguro.
+ * Contiene información sobre el monto, fecha y estado del pago.
+ */
 public class Payment {
 
     private Long id;

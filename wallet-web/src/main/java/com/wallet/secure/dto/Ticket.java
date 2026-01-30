@@ -2,6 +2,10 @@ package com.wallet.secure.dto;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO que representa un ticket de soporte.
+ * Contiene el asunto, mensaje, estado y la asociación con el usuario creador.
+ */
 public class Ticket {
 
     private Long id;

@@ -9,6 +9,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+/**
+ * Controlador REST para la gestión de subida de archivos.
+ * <p>
+ * Gestiona el almacenamiento de archivos (imágenes, documentos) en el servidor.
+ * </p>
+ */
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
@@ -16,6 +22,12 @@ public class FileController {
 
     private static String UPLOAD_DIR = "uploads/";
 
+    /**
+     * Sube un archivo al servidor.
+     *
+     * @param file El archivo binario a subir (MultipartFile).
+     * @return ResponseEntity con la URL de acceso al archivo o mensaje de error.
+     */
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {

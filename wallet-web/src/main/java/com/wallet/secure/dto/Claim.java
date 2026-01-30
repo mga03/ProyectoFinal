@@ -3,6 +3,10 @@ package com.wallet.secure.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDate;
 
+/**
+ * DTO que representa una reclamación o siniestro asociado a un seguro.
+ * Utilizado para la transferencia de datos entre el cliente (API) y las vistas.
+ */
 public class Claim {
 
     private Long id;

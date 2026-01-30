@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Controlador para la gestión del perfil de usuario en el frontend.
+ * Permite visualizar el perfil, actualizar datos, solicitar cambios de rol y eliminar la cuenta.
+ */
 @Controller
 public class UserController {
 
@@ -21,6 +25,13 @@ public class UserController {
         this.apiClientService = apiClientService;
     }
 
+    /**
+     * Muestra la página de perfil del usuario.
+     *
+     * @param model Modelo de la vista.
+     * @param userDetails Detalles del usuario autenticado.
+     * @return Nombre de la vista de perfil.
+     */
     @GetMapping("/profile")
     public String profile(Model model, @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
@@ -37,6 +48,15 @@ public class UserController {
         return "profile";
     }
 
+    /**
+     * Actualiza la información del perfil del usuario.
+     *
+     * @param userForm Objeto User con datos nuevos.
+     * @param result Resultado de validación.
+     * @param userDetails Detalles de autenticación.
+     * @param model Modelo para la vista en caso de error.
+     * @return Redirección a perfil con mensaje de éxito o retorno a vista con errores.
+     */
     @PostMapping("/profile/update")
     public String updateProfile(@jakarta.validation.Valid @ModelAttribute("user") User userForm,
                                 org.springframework.validation.BindingResult result,
@@ -66,6 +86,14 @@ public class UserController {
         return "redirect:/profile?success";
     }
 
+    /**
+     * Procesa la solicitud de cambio de rol de un usuario.
+     *
+     * @param desiredRole Rol que el usuario desea obtener.
+     * @param userDetails Detalles del usuario autenticado.
+     * @param redirectAttributes Atributos para mensajes flash.
+     * @return Redirección a perfil.
+     */
     @PostMapping("/profile/request-role")
     public String requestRoleChange(@RequestParam String desiredRole, 
                                     @AuthenticationPrincipal UserDetails userDetails,
@@ -81,6 +109,15 @@ public class UserController {
     }
 
     // @PostMapping("/profile/delete") - Fix compilation by using RequestParam correctly
+    /**
+     * Elimina la cuenta del usuario actual tras confirmación.
+     *
+     * @param confirmation Palabra clave de confirmación ("eliminar").
+     * @param userDetails Detalles del usuario usuario.
+     * @param request Petición HTTP.
+     * @param response Respuesta HTTP.
+     * @return Redirección a login tras eliminar cuenta y cerrar sesión.
+     */
     @PostMapping("/profile/delete")
     public String deleteProfile(@RequestParam("confirmation") String confirmation, 
                                 @AuthenticationPrincipal UserDetails userDetails,

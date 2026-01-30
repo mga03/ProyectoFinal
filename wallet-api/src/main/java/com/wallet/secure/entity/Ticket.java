@@ -3,10 +3,20 @@ package com.wallet.secure.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Entidad que representa un ticket de soporte técnico o atención al cliente.
+ * <p>
+ * Permite a los usuarios comunicar incidencias, las cuales son gestionadas
+ * por los administradores o personal de soporte.
+ * </p>
+ */
 @Entity
 @Table(name = "tickets")
 public class Ticket {
 
+    /**
+     * Identificador único del ticket.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

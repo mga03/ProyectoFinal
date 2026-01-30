@@ -2,6 +2,10 @@ package com.wallet.secure.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+/**
+ * DTO que representa a un beneficiario de un seguro.
+ * Incluye nombre completo, relación con el asegurado y documento de identidad.
+ */
 public class Beneficiary {
 
     private Long id;

@@ -3,10 +3,19 @@ package com.wallet.secure.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+/**
+ * Entidad que representa un beneficiario de un seguro.
+ * <p>
+ * Contiene los datos personales y la relación con el titular del seguro.
+ * </p>
+ */
 @Entity
 @Table(name = "beneficiaries")
 public class Beneficiary {
 
+    /**
+     * Identificador único del beneficiario.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

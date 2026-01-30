@@ -9,6 +9,13 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
 
+/**
+ * DTO que representa una póliza de seguro en la capa de presentación.
+ * <p>
+ * Contiene validaciones para los formularios de creación y edición,
+ * así como relaciones con los listados de reclamaciones, pagos y beneficiarios.
+ * </p>
+ */
 public class Insurance {
 
     private Long id;

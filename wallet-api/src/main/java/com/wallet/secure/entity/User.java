@@ -5,10 +5,20 @@ import jakarta.validation.constraints.Pattern;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entidad que representa a los usuarios del sistema.
+ * <p>
+ * Gestiona la información de autenticación, roles, datos personales
+ * y relaciones con otras entidades como seguros y tickets de soporte.
+ * </p>
+ */
 @Entity
 @Table(name = "users")
 public class User {
 
+    /**
+     * Identificador único del usuario.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
